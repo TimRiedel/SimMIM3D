@@ -88,9 +88,9 @@ img_loader = DataLoader(img_dataset, batch_size=1, num_workers=4, shuffle=False)
 
 # Iterate over dataset and store results
 idx = 1;
-for img, seg in img_loader:
-    img = img[0]
-    seg = seg[0]
+for img_batch, seg_batch in img_loader:
+    img = img_batch[0]
+    seg = seg_batch[0]
     print("------------------------------------")
     print(f"Preparing next image and mask: {idx}")
 
