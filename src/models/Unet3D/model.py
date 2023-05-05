@@ -30,15 +30,27 @@ class Unet3D(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss, y_pred, y = self.common_step(batch, batch_idx)
-        accuracy = self.accuracy(y_pred, y)
-        dice_score = self.dice_score(y_pred, y)
         self.log_dict(
-            {"train_loss": loss, "train_accuracy": accuracy, "train_dice_score": dice_score}, 
+            {"train_loss": loss}, 
             on_step=False, 
             on_epoch=True, 
             prog_bar=True
         )
-        return loss
+        # TODO: Log images of some batches
+        return {"loss": loss, "y_pred": y_pred, "y": y}
+    
+    def training_epoch_end(self, outputs):
+        y_pred = torch.cat([x["y_pred"] for x in outputs])
+        y = torch.cat([x["y"] for x in outputs])
+        self.log_dict(
+            {
+                "train_accuracy": self.accuracy(y_pred, y),
+                "train_dice_score": self.dice_score(y_pred, y),
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def validation_step(self, batch, batch_idx):
         loss, y_pred, y = self.common_step(batch, batch_idx)

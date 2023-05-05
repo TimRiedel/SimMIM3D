@@ -52,26 +52,4 @@ val_ds = Dataset(data=val_dict, transform=val_transform)
 val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=4)
 #%%
 
-network = UNet(
-    spatial_dims=3,
-    in_channels=4, # 4 modalities (FLAIR, T1, T1ce, T2)
-    out_channels=4, # 4 segmentation classes
-    channels=(16, 32, 64, 128, 256),
-    strides=(2, 2, 2, 2),
-    kernel_size=3,
-    up_kernel_size=3,
-    num_res_units=2, #TODO: Understand
-    dropout=0.1, #TODO: Understand
-)
-summary(network, input_size=(1, 4, 192, 192, 128))
 
-model = UNet3D(
-    net=network,
-    num_classes=4,
-    loss_fn=None, #TODO: Choose loss function
-    learning_rate=1e-2, #TODO: Choose learning rate
-    optimizer_class=torch.optim.AdamW, #TODO: Choose optimizer
-)
-
-trainer = pl.Trainer(accelerator="gpu")
-trainer.fit(model, train_loader, val_loader)
