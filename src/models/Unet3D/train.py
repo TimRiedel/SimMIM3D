@@ -2,57 +2,79 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from monai.losses import DiceLoss
 from monai.networks.nets import UNet
 
-from .config import *
-from .model import UNet3D
+from src.models.Unet3D.config import *
+from src.models.Unet3D.data_module import BratsDataModule
+from src.models.Unet3D.model import Unet3D
+from src.mlutils.callbacks import LogValidationPredictions
+
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
 
 if __name__ == "__main__":
+    pl.seed_everything(1)
+
     network = UNet(
         spatial_dims=3,
-        in_channels=4, # 4 modalities (FLAIR, T1, T1ce, T2)
-        out_channels=4, # 4 segmentation classes
+        in_channels=NUM_CHANNELS,
+        out_channels=NUM_CLASSES,
         channels=(16, 32, 64, 128, 256),
         strides=(2, 2, 2, 2),
         kernel_size=3,
         up_kernel_size=3,
-        num_res_units=2, #TODO: Understand
-        dropout=0.1, #TODO: Understand
+        num_res_units=2,
+        dropout=0.1,
+    )
+    
+    loss_fn = DiceLoss(
+        squared_pred=True, 
+        to_onehot_y=False, 
+        softmax=True,
     )
 
-    model = UNet3D(
+    model = Unet3D(
         net=network,
         num_classes=NUM_CLASSES,
-        loss_fn=None, #TODO: Choose loss function
-        learning_rate=LEARNING_RATE, #TODO: Choose learning rate
-        optimizer_class=torch.optim.AdamW, #TODO: Choose optimizer
+        loss_fn=loss_fn,
+        learning_rate=LEARNING_RATE,
+        optimizer_class=torch.optim.AdamW,
     )
+    
 
-    #TODO: import data module
-    data = BraTSDataModule(
+    data = BratsDataModule(
         data_dir=DATA_DIR, 
         batch_size=BATCH_SIZE, 
+        input_size=INPUT_SIZE,
         num_workers=NUM_WORKERS
     )
 
     callbacks = [
-        EarlyStopping(monitor="val_loss", patience=5),
-        ModelCheckpoint(monitor="val_accuracy", mode="max"),
+        # EarlyStopping(monitor="val_loss", patience=5),
+        # ModelCheckpoint(monitor="val_accuracy", mode="max"),
+        LogValidationPredictions(),
     ]
 
-    logger = WandbLogger(project="ba-thesis", name="Unet3D")
+    logger = WandbLogger(project="ba-thesis", name="Unet3D Brats", log_model="all")
 
     #TODO: Add profiler
 
     trainer = pl.Trainer(
         accelerator=ACCELERATOR, 
-        devices=DEVICES, 
+        devices=DEVICES,
+        num_nodes=2,
         strategy="ddp",
         precision=PRECISION, 
         max_epochs=NUM_EPOCHS,
+        # TODO: Add gradient accumulation
+        # accumulate_grad_batches=BATCH_SIZE
         callbacks=callbacks,
         logger=logger,
         profiler="simple",
+        num_sanity_val_steps=2,
+        limit_train_batches=2,
+        limit_val_batches=2
     )
 
     trainer.fit(model, data)
