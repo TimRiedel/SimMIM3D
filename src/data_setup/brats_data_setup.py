@@ -18,7 +18,7 @@ from monai.transforms import (
 )
 
 from src.mlutils.transforms import MapToSequentialChannels, CombineBraTSChannels
-from src.mlutils.plotting import plot_image, plot_segmentation
+from src.mlutils.plotting import plot_image_file, plot_segmentation_file
 
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
