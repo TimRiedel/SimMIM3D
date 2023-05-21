@@ -1,16 +1,6 @@
 import torch
 from monai.transforms import Transform, MapTransform
 
-class MapToSequentialChannels(Transform):
-    """
-    Labels in the BraTS dataset are stored in channels [0, 1, 2, 4].
-    This transform converts them to the sequential order [0, 1, 2, 3].
-    """
-    def __call__(self, data):
-        data[data==4] = 3
-        return data
-
-
 class MapToSequentialChannelsd(MapTransform):
     """
     Labels in the BraTS dataset are stored in channels [0, 1, 2, 4].
@@ -24,5 +14,5 @@ class MapToSequentialChannelsd(MapTransform):
             result.append(d[key] == 1)
             result.append(d[key] == 2)
             result.append(d[key] == 3)
-            d[key] = torch.stack(result, axis=0)
-        return d
+            result.append(d[key] == 2)
+            d[key] = torch.stack(result, axis=0).float()
