@@ -17,6 +17,7 @@ from monai.transforms import (
     RandScaleIntensityd,
     RandShiftIntensityd, 
     RandSpatialCropd,
+    ConvertToMultiChannelBasedOnBratsClassesd
 )
 
 from src.mlutils.transforms import MapToSequentialChannelsd
@@ -37,9 +38,9 @@ class BratsDataModule(pl.LightningDataModule):
             LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
-            MapToSequentialChannelsd(keys="label"),
+            ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            SpatialCropd(keys=["image", "label"], roi_size=(192, 192, 128), roi_center=(120, 120, 81)),
+            SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
@@ -54,14 +55,12 @@ class BratsDataModule(pl.LightningDataModule):
             LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
-            MapToSequentialChannelsd(keys="label"),
+            ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            SpatialCropd(keys=["image", "label"], roi_size=(192, 192, 128), roi_center=(120, 120, 81)),
+            SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
         ])
-
-        # TODO: Add test transform
 
 
     def setup(self, stage=None):
@@ -83,8 +82,7 @@ class BratsDataModule(pl.LightningDataModule):
                 num_workers=self.num_workers,
                 cache_rate=0.0,
             )
-        
-        # TODO: Add test dataset
+
         if stage == 'test' or stage is None:
             self.test_ds = DecathlonDataset(
                 root_dir=self.data_dir,
@@ -94,7 +92,7 @@ class BratsDataModule(pl.LightningDataModule):
                 num_workers=self.num_workers,
                 cache_rate=0.0,
             )
-
+        
 
     def train_dataloader(self):
         return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, pin_memory=True)
