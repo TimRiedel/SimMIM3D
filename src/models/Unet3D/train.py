@@ -6,7 +6,7 @@ from monai.losses import DiceLoss
 from monai.networks.nets import UNet
 
 from src.models.Unet3D.config import *
-from src.data_modules.brats_data_module import BratsDataModule
+from src.models.Unet3D.brats_data_module import BratsDataModule
 from src.models.Unet3D.model import Unet3D
 from src.mlutils.callbacks import LogValidationPredictions
 
