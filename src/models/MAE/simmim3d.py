@@ -48,6 +48,6 @@ class SimMIM3D(nn.Module):
 
         if self.should_pretrain:
             x_rec = self.decoder(z)
-            return z, x_rec
+            return x_rec
 
         return z

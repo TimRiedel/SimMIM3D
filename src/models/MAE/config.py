@@ -14,4 +14,7 @@ NUM_WORKERS = 4
 ACCELERATOR = "gpu"
 STRATEGY="ddp"
 DEVICES = 1
-PRECISION = 16
+PRECISION = "16-mixed"
+
+# Logging
+WANDB_DIR = "/dhc/home/tim.riedel/bachelor-thesis/jobs/wandb"

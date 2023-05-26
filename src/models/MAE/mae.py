@@ -15,7 +15,7 @@ class MAE(pl.LightningModule):
         self.save_hyperparameters(ignore=["net", "loss_fn"])
 
     def configure_optimizers(self):
-        #TODO: Choose Scheduler
+        # TODO: add learning rate scheduler
         optimizer = self.optimizer_class(self.parameters(), lr=self.lr)
         return optimizer
 
