@@ -2,6 +2,7 @@
 INPUT_SIZE = (96, 96, 96)
 NUM_CHANNELS = 4
 NUM_CLASSES = 3
+PATCH_SIZE = 16
 LEARNING_RATE = 3e-4
 BATCH_SIZE = 4
 NUM_EPOCHS = 100 #TODO: Set number of epochs
@@ -13,7 +14,8 @@ NUM_WORKERS = 4
 # Compute related
 ACCELERATOR = "gpu"
 STRATEGY="ddp"
-DEVICES = 1
+DEVICES = "-1"
+NODES = 1
 PRECISION = "16-mixed"
 
 # Logging

@@ -1,10 +1,7 @@
-import numpy as np
 import pytorch_lightning as pl
 import torch
-from torch.utils.data import random_split
 from monai.apps import DecathlonDataset
-from monai.data import Dataset, DataLoader
-from monai.networks.nets import UNet, BasicUNet
+from monai.data import DataLoader
 from monai.transforms import (
     Compose, 
     EnsureChannelFirstd, 
@@ -17,10 +14,9 @@ from monai.transforms import (
     RandScaleIntensityd,
     RandShiftIntensityd, 
     RandSpatialCropd,
-    ConvertToMultiChannelBasedOnBratsClassesd
 )
 
-from src.mlutils.transforms import MapToSequentialChannelsd
+from seg3d.src.mlutils.transforms import MaskGenerator3D
 
 class BratsImageModule(pl.LightningDataModule):
     def __init__(self, data_dir, batch_size, input_size, num_workers):
@@ -30,8 +26,8 @@ class BratsImageModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.input_size = input_size
 
-        max_size = torch.tensor((192, 192, 128))
-        assert torch.all(torch.tensor(input_size) <= max_size), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
+        max_size = (192, 192, 128)
+        assert torch.all(torch.tensor(input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
 
         self.train_transform = Compose([
             LoadImaged(keys=["image"]),
@@ -46,6 +42,7 @@ class BratsImageModule(pl.LightningDataModule):
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
             RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
             RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
+            MaskGenerator3D(),
         ])
 
         self.val_transform = Compose([
@@ -56,6 +53,7 @@ class BratsImageModule(pl.LightningDataModule):
             SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
+            MaskGenerator3D(),   
         ])
 
 

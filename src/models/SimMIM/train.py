@@ -5,8 +5,8 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 
-from src.models.MAE import MAE, SimMIM3D, BratsImageModule 
-from src.models.MAE.config import *
+from src.models.SimMIM import MAE, SimMIM3D, BratsImageModule 
+from src.models.SimMIM.config import *
 
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -15,6 +15,8 @@ if __name__ == "__main__":
     network = SimMIM3D(
         img_size=INPUT_SIZE,
         in_channels=NUM_CHANNELS,
+        # TODO: higher patch size reduces computation needs
+        patch_size=PATCH_SIZE,
     )
     
     # TODO: observe if reduction="none" is necessary
@@ -41,12 +43,12 @@ if __name__ == "__main__":
         # Compute
         accelerator=ACCELERATOR, 
         devices=DEVICES,
-        num_nodes=1,
+        num_nodes=NODES,
         strategy="ddp",
         precision=PRECISION, 
 
         # Training
-        max_epochs=4,
+        max_epochs=2,
 
         # Logging
         logger=logger,

@@ -19,9 +19,12 @@ class MAE(pl.LightningModule):
         optimizer = self.optimizer_class(self.parameters(), lr=self.lr)
         return optimizer
 
+    def prepare_batch(self, batch):
+        return batch["image"], batch["mask"]
+
     def common_step(self, batch, batch_idx):
-        x = batch["image"]
-        x_pred = self.net(x)
+        x, mask = self.prepare_batch(batch)
+        x_pred = self.net(x, mask)
         loss = self.loss_fn(x_pred, x)
         return loss, x_pred
 
@@ -41,6 +44,6 @@ class MAE(pl.LightningModule):
         return {"loss": loss, "x_pred": x_pred}
 
     def predict_step(self, batch, batch_idx):
-        x = self.prepare_batch(batch)
+        x, mask = self.prepare_batch(batch)
         prediction = self.net(x)
         return prediction
