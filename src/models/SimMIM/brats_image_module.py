@@ -39,9 +39,9 @@ class BratsImageModule(pl.LightningDataModule):
             RandFlipd(keys="image", prob=0.5, spatial_axis=0),
             RandFlipd(keys="image", prob=0.5, spatial_axis=1),
             RandFlipd(keys="image", prob=0.5, spatial_axis=2),
-            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
-            RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
+            NormalizeIntensityd(keys="image", channel_wise=True),
+            # RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
+            # RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
             MaskGenerator3D(),
         ])
 
@@ -52,8 +52,8 @@ class BratsImageModule(pl.LightningDataModule):
             Orientationd(keys="image", axcodes="RAS"),
             SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
-            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
-            MaskGenerator3D(),   
+            NormalizeIntensityd(keys="image", channel_wise=True),
+            MaskGenerator3D(),
         ])
 
 
