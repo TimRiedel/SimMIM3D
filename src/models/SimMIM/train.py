@@ -20,11 +20,12 @@ if __name__ == "__main__":
     )
     
     # TODO: observe if reduction="none" is necessary
-    loss_fn = nn.L1Loss() 
+    loss_fn = nn.MSELoss() 
 
     model = MAE(
         net = network,
         loss_fn=loss_fn,
+        num_channels=NUM_CHANNELS,
         learning_rate=LEARNING_RATE,
         optimizer_class=torch.optim.AdamW,
         # TODO: add learning rate scheduler
@@ -37,20 +38,23 @@ if __name__ == "__main__":
         num_workers=NUM_WORKERS
     )
 
-    logger = WandbLogger(project="ba-thesis", name="SimMIM3D", log_model="all", dir=WANDB_DIR)
+    logger = WandbLogger(project="ba-thesis", name=RUN_NAME, log_model="all", dir=WANDB_DIR)
+
+    callbacks = ModelCheckpoint(dirpath=CHECKPOINT_DIR, monitor="validation/loss")
 
     trainer = pl.Trainer(
         # Compute
         accelerator=ACCELERATOR, 
+        strategy="ddp",
         devices=DEVICES,
         num_nodes=NODES,
-        strategy="ddp",
         precision=PRECISION, 
 
         # Training
-        max_epochs=2,
+        max_epochs=NUM_EPOCHS,
 
         # Logging
+        callbacks=callbacks,
         logger=logger,
         profiler="simple",
     )
