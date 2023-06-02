@@ -15,8 +15,8 @@ if __name__ == "__main__":
     network = SimMIM3D(
         img_size=IMG_SIZE,
         in_channels=IN_CHANNELS,
-        # TODO: higher patch size reduces computation needs
         patch_size=PATCH_SIZE,
+        dropout_rate=ENCODER_DROPOUT,
     )
     
     # TODO: observe if reduction="none" is necessary

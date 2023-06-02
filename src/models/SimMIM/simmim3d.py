@@ -11,6 +11,7 @@ class SimMIM3D(nn.Module):
         in_channels: int = 4, 
         patch_size: int = 16, 
         embed_dim: int = 768, 
+        dropout_rate: float = 0.0,
         is_pretrain: bool = True
     ) -> None :
         super().__init__()
@@ -27,6 +28,7 @@ class SimMIM3D(nn.Module):
             in_channels=self.in_channels, 
             patch_size=(self.patch_size,) * 3,
             embed_dim=self.embed_dim,
+            dropout_rate=dropout_rate,
         )
 
         self.decoder = nn.ConvTranspose3d(
