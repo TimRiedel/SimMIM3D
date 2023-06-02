@@ -46,9 +46,9 @@ class SimMIM3D(nn.Module):
     
     def forward(self, x, mask):
         z = self.encoder(x, mask)
-        z = self.reshape_3d(z)
 
         if self.is_pretrain:
+            z = self.reshape_3d(z)
             x_rec = self.decoder(z)
             return x_rec
 

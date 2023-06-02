@@ -5,7 +5,7 @@ import wandb
 from monai.metrics import PSNRMetric
 
 class MAE(pl.LightningModule):
-    def __init__(self, net, num_channels: int, loss_fn, learning_rate, optimizer_class):
+    def __init__(self, net, in_channels: int, loss_fn, learning_rate, optimizer_class):
         super().__init__()
         self.net = net
         self.loss_fn = loss_fn
@@ -14,7 +14,7 @@ class MAE(pl.LightningModule):
         self.train_step_outputs = []
 
         # Metrics
-        self.num_channels = num_channels
+        self.in_channels = in_channels
         # self.psnr = PSNRMetric()
 
         # Logging

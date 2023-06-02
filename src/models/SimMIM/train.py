@@ -13,8 +13,8 @@ warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is
 
 if __name__ == "__main__":
     network = SimMIM3D(
-        img_size=INPUT_SIZE,
-        in_channels=NUM_CHANNELS,
+        img_size=IMG_SIZE,
+        in_channels=IN_CHANNELS,
         # TODO: higher patch size reduces computation needs
         patch_size=PATCH_SIZE,
     )
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     model = MAE(
         net = network,
         loss_fn=loss_fn,
-        num_channels=NUM_CHANNELS,
+        in_channels=IN_CHANNELS,
         learning_rate=LEARNING_RATE,
         optimizer_class=torch.optim.AdamW,
         # TODO: add learning rate scheduler
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     data = BratsImageModule(
         data_dir=BRATS_DATA_DIR, 
         batch_size=BATCH_SIZE, 
-        input_size=INPUT_SIZE,
+        input_size=IMG_SIZE,
         num_workers=NUM_WORKERS
     )
 
