@@ -3,15 +3,27 @@ import pytorch_lightning as pl
 import torchmetrics
 import wandb
 from monai.metrics import PSNRMetric
+from monai.optimizers import WarmupCosineSchedule
 
 class MAE(pl.LightningModule):
-    def __init__(self, net, loss_fn, learning_rate: float, optimizer_class):
+    def __init__(
+            self,
+            net,
+            loss_fn,
+            learning_rate:
+            float, optimizer_class,
+            weight_decay: float,
+            warmup_epochs: int,
+            epochs: int
+        ):
         super().__init__()
         self.net = net
         self.loss_fn = loss_fn
-        self.lr = learning_rate
+        self.learning_rate = learning_rate
         self.optimizer_class = optimizer_class
-        self.train_step_outputs = []
+        self.weight_decay = weight_decay
+        self.warmup_epochs = warmup_epochs
+        self.epochs = epochs
 
         # Metrics
         # self.psnr = PSNRMetric()
@@ -22,9 +34,18 @@ class MAE(pl.LightningModule):
         self.channel_idx = 0
 
     def configure_optimizers(self):
-        # TODO: add learning rate scheduler
-        optimizer = self.optimizer_class(self.parameters(), lr=self.lr)
-        return optimizer
+        optimizer = self.optimizer_class(
+            self.parameters(), 
+            lr=self.learning_rate, 
+            weight_decay=self.weight_decay
+        )
+
+        lr_scheduler = WarmupCosineSchedule(
+            optimizer=optimizer,
+            warmup_steps=self.warmup_epochs,
+            t_total=self.epochs
+        )
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler}
 
     def prepare_batch(self, batch):
         return batch["image"], batch["mask"]

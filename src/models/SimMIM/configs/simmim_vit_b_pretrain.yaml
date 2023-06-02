@@ -1,5 +1,5 @@
 LOGGING:
-    RUN_NAME: SimMIM3D_PT_Brats
+    RUN_NAME: SimMIM3D_PT_Brats_v1
     WANDB_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/wandb
     CHECKPOINT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats
 DATA:
@@ -10,11 +10,13 @@ DATA:
     MASK_RATIO: 0.75
 TRAINING:
     BASE_LR: 3e-4
-    EPOCHS: 800
+    WEIGHT_DECAY: 0.005
+    WARMUP_EPOCHS: 100
+    EPOCHS: 900
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
-    ENCODER_DROPOUT: 0.1
+    ENCODER_DROPOUT: 0.2
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

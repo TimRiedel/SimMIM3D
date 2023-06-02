@@ -45,8 +45,12 @@ _C.DATA.MASK_RATIO = 0.75
 _C.TRAINING = CN()
 # Learning rate for the optimizer
 _C.TRAINING.BASE_LR = 3e-4
+# Weight decay for the optimizer
+_C.TRAINING.WEIGHT_DECAY = 0.01
+# Number of warmup epochs for learning rate scheduler
+_C.TRAINING.WARMUP_EPOCHS = 100
 # Number of epochs to train for
-_C.TRAINING.EPOCHS = 100
+_C.TRAINING.EPOCHS = 900
 
 
 _C.MODEL = CN()

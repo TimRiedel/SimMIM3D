@@ -31,7 +31,9 @@ if __name__ == "__main__":
         loss_fn=loss_fn,
         learning_rate=cfg.TRAINING.BASE_LR,
         optimizer_class=torch.optim.AdamW,
-        # TODO: add learning rate scheduler
+        weight_decay=cfg.TRAINING.WEIGHT_DECAY,
+        warmup_epochs=cfg.TRAINING.WARMUP_EPOCHS,
+        epochs=cfg.TRAINING.EPOCHS,
     )
     
     data = BratsImageModule(
