@@ -1,25 +1,82 @@
-# Logging
-RUN_NAME = "SimMIM3D_PT_Brats"
-WANDB_DIR = "/dhc/home/tim.riedel/bachelor-thesis/jobs/wandb"
-CHECKPOINT_DIR = f"/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/{RUN_NAME}"
+# my_project/config.py
+import os
+from yacs.config import CfgNode as CN
+import pathlib
 
-# Training hyperparameters
-IMG_SIZE = (96, 96, 96)
-IN_CHANNELS = 4
-NUM_CLASSES = 3
-PATCH_SIZE = 16 # TODO: higher patch size reduces computation needs
-LEARNING_RATE = 3e-4
-BATCH_SIZE = 16
-NUM_EPOCHS = 2
-ENCODER_DROPOUT = 0.1
+HOME_DIR = os.getcwd()
 
-# Dataset
-BRATS_DATA_DIR = "/dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017"
-NUM_WORKERS = 16
+_C = CN()
 
-# Compute related
-ACCELERATOR = "gpu"
-STRATEGY="ddp"
-DEVICES = "-1"
-NODES = 1
-PRECISION = "16-mixed"
+_C.SYSTEM = CN()
+# Accelerator to use in the experiment
+_C.SYSTEM.ACCELERATOR = "gpu"
+# Strategy for single / multiple GPUs
+_C.SYSTEM.STRATEGY = "ddp"
+# Number of GPUS to use in the experiment
+_C.SYSTEM.DEVICES = -1
+# Number of nodes on a distributed system
+_C.SYSTEM.NODES = 1
+# Floating point precision for weights
+_C.SYSTEM.PRECISION = "16-mixed"
+
+
+_C.LOGGING = CN()
+# Name of the run
+_C.LOGGING.RUN_NAME = "SimMIM3D_PT_Brats"
+# Directory for wandb logs
+_C.LOGGING.WANDB_DIR = f"{HOME_DIR}/jobs/wandb"
+# Directory for saving checkpoints
+_C.LOGGING.CHECKPOINT_DIR = f"{HOME_DIR}/jobs/checkpoints/SimMIM3D_PT_Brats"
+
+
+_C.DATA = CN()
+# Directory for BraTS2017 dataset
+_C.DATA.BRATS_DATA_DIR = f"{HOME_DIR}/data/BraTS2017"
+# Input image size in one dimension
+_C.DATA.IMG_SIZE = 96
+# Batch size for a single GPU
+_C.DATA.BATCH_SIZE = 8
+# Number of data loading threads
+_C.DATA.NUM_WORKERS = 16
+# [SimMIM] Mask patch size for MaskGenerator
+_C.DATA.MASK_RATIO = 0.75
+
+
+_C.TRAINING = CN()
+# Learning rate for the optimizer
+_C.TRAINING.BASE_LR = 3e-4
+# Number of epochs to train for
+_C.TRAINING.EPOCHS = 100
+
+
+_C.MODEL = CN()
+# Number of input channels
+_C.MODEL.IN_CHANNELS = 4
+# Size of one patch
+_C.MODEL.PATCH_SIZE = 16
+# Dropout rate for the encoder
+_C.MODEL.ENCODER_DROPOUT = 0.0
+
+
+def get_config():
+    """Get a yacs CfgNode object with default values for my_project."""
+    path = pathlib.Path(__file__).parent.resolve()
+    _C.merge_from_file(f"{str(path)}/configs/simmim_vit_b_pretrain.yaml")
+    return _C.clone()
+
+
+# Source: https://github.com/rbgirshick/yacs/issues/19
+def convert_cfg_to_dict(cfg_node, key_list=[]):
+    """ Convert a config node to dictionary """
+
+    _VALID_TYPES = {tuple, list, str, int, float, bool}
+    if not isinstance(cfg_node, CN):
+        if type(cfg_node) not in _VALID_TYPES:
+            print("Key {} with value {} is not a valid type; valid types: {}".format(
+                ".".join(key_list), type(cfg_node), _VALID_TYPES), )
+        return cfg_node
+    else:
+        cfg_dict = dict(cfg_node)
+        for k, v in cfg_dict.items():
+            cfg_dict[k] = convert_cfg_to_dict(v, key_list + [k])
+        return cfg_dict

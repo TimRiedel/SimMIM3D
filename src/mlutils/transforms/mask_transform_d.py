@@ -3,9 +3,14 @@ import torch
 from monai.transforms import MapTransform
 
 class MaskGenerator3D(MapTransform):
-    def __init__(self, input_size=96, input_channels=4, mask_patch_size=16, model_patch_size=1, mask_ratio=0.755555):
-        self.input_size = input_size
-        self.input_channels = input_channels
+    def __init__(
+            self, 
+            img_size: int = 96, 
+            mask_patch_size: int = 16, 
+            model_patch_size: int = 1, 
+            mask_ratio: float = 0.75
+        ):
+        self.input_size = img_size
         self.mask_patch_size = mask_patch_size
         self.model_patch_size = model_patch_size
         self.mask_ratio = mask_ratio

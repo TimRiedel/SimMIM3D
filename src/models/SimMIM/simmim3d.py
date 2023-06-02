@@ -7,7 +7,7 @@ from src.models.SimMIM.masked_vit import MaskedViT3D
 class SimMIM3D(nn.Module):
     def __init__(
         self, 
-        img_size: Union[Sequence[int], int] = (96, 96, 96),
+        img_size: int = 96,
         in_channels: int = 4, 
         patch_size: int = 16, 
         embed_dim: int = 768, 
@@ -24,7 +24,7 @@ class SimMIM3D(nn.Module):
         self.is_pretrain = is_pretrain
 
         self.encoder = MaskedViT3D(
-            img_size=self.img_size, 
+            img_size=(self.img_size,) * 3, 
             in_channels=self.in_channels, 
             patch_size=(self.patch_size,) * 3,
             embed_dim=self.embed_dim,

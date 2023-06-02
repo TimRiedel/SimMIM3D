@@ -19,15 +19,23 @@ from monai.transforms import (
 from seg3d.src.mlutils.transforms import MaskGenerator3D
 
 class BratsImageModule(pl.LightningDataModule):
-    def __init__(self, data_dir, batch_size, input_size, num_workers):
+    def __init__(
+            self,
+            data_dir: str,
+            batch_size: int,
+            num_workers: int,
+            img_size: int = 96,
+            patch_size: int = 1,
+            mask_ratio: float = 0.0
+        ):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.input_size = input_size
+        self.input_size = (img_size,) * 3
 
         max_size = (192, 192, 128)
-        assert torch.all(torch.tensor(input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
+        assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
 
         self.train_transform = Compose([
             LoadImaged(keys=["image"]),
@@ -40,9 +48,8 @@ class BratsImageModule(pl.LightningDataModule):
             RandFlipd(keys="image", prob=0.5, spatial_axis=1),
             RandFlipd(keys="image", prob=0.5, spatial_axis=2),
             NormalizeIntensityd(keys="image", channel_wise=True),
-            # RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
-            # RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
-            MaskGenerator3D(),
+            RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
         ])
 
         self.val_transform = Compose([
@@ -53,7 +60,7 @@ class BratsImageModule(pl.LightningDataModule):
             SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
             NormalizeIntensityd(keys="image", channel_wise=True),
-            MaskGenerator3D(),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio),
         ])
 
 
