@@ -1,6 +1,4 @@
-import torch
 import pytorch_lightning as pl
-import torchmetrics
 import wandb
 from monai.metrics import PSNRMetric
 from monai.optimizers import WarmupCosineSchedule
@@ -76,17 +74,12 @@ class MAE(pl.LightningModule):
         self.log("validation/loss", outputs["loss"], on_step=True, sync_dist=True, batch_size=batch["image"].shape[0])
 
         if batch_idx == 0:
-            table = wandb.Table(columns=["original", "reconstruction"])
-            images = batch["image"][:self.num_samples, self.channel_idx].detach().cpu()
-            reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx].detach().cpu()
-            slice_idx = images[0].shape[2] // 2
+            slice_idx = batch["image"].shape[4] // 2
+            images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
+            reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
 
-            for i in range(images.shape[0]):
-                img = images[i, :, :, slice_idx]
-                recon = reconstructions[i, :, :, slice_idx]
-                table.add_data(wandb.Image(img), wandb.Image(recon))
-
-            self.logger.experiment.log({"validation/images": table}) # type: ignore
+            wandb.log({"validation/original": [wandb.Image(img) for img in images]})
+            wandb.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]})
 
 
     # Testing
