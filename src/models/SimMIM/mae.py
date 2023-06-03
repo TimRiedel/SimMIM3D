@@ -7,27 +7,22 @@ class MAE(pl.LightningModule):
     def __init__(
             self,
             net,
-            loss_fn,
-            learning_rate:
-            float, optimizer_class,
+            learning_rate: float, 
+            optimizer_class,
             weight_decay: float,
             warmup_epochs: int,
             epochs: int
         ):
         super().__init__()
         self.net = net
-        self.loss_fn = loss_fn
         self.learning_rate = learning_rate
         self.optimizer_class = optimizer_class
         self.weight_decay = weight_decay
         self.warmup_epochs = warmup_epochs
         self.epochs = epochs
 
-        # Metrics
-        # self.psnr = PSNRMetric()
-
         # Logging
-        self.save_hyperparameters(ignore=["net", "loss_fn", "learning_rate"])
+        self.save_hyperparameters(ignore=["net", "learning_rate"])
         self.num_samples = 10
         self.channel_idx = 0
 
@@ -48,16 +43,11 @@ class MAE(pl.LightningModule):
     def prepare_batch(self, batch):
         return batch["image"], batch["mask"]
 
-    def common_step(self, x, mask, batch_idx):
-        x_pred = self.net(x, mask)
-        loss = self.loss_fn(x_pred, x)
-        return loss, x_pred
-
 
     # Training
     def training_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.common_step(x, mask, batch_idx)
+        loss, x_pred = self.net(x, mask)
         return {"loss": loss, "x_pred": x_pred}
     
     def on_train_batch_end(self, outputs, batch, batch_idx):
@@ -67,7 +57,7 @@ class MAE(pl.LightningModule):
     # Validation
     def validation_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.common_step(x, mask, batch_idx)
+        loss, x_pred = self.net(x, mask)
         return {"loss": loss, "x_pred": x_pred}
 
     def on_validation_batch_end(self, outputs, batch, batch_idx):
@@ -78,19 +68,19 @@ class MAE(pl.LightningModule):
             images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
             reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
 
-            wandb.log({"validation/original": [wandb.Image(img) for img in images]})
-            wandb.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]})
+            self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]})
+            self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]})
 
 
     # Testing
     def test_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.common_step(x, mask, batch_idx)
+        loss, x_pred = self.net(x, mask)
         return {"loss": loss, "x_pred": x_pred}
 
     
     # Prediction
     def predict_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        prediction = self.net(x)
-        return prediction
+        loss, x_pred = self.net(x, mask)
+        return x_pred

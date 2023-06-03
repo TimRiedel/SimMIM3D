@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from typing import Sequence, Union
 
 from src.models.SimMIM.masked_vit import MaskedViT3D
@@ -52,6 +53,10 @@ class SimMIM3D(nn.Module):
         if self.is_pretrain:
             z = self.reshape_3d(z)
             x_rec = self.decoder(z)
-            return x_rec
+
+            mask = mask.repeat_interleave(self.patch_size, 1).repeat_interleave(self.patch_size, 2).repeat_interleave(self.patch_size, 3).unsqueeze(1).contiguous()
+            loss_recon = F.l1_loss(x, x_rec, reduction='none')
+            loss = (loss_recon * mask).sum() / (mask.sum() + 1e-5) / self.in_channels
+            return loss, x_rec
 
         return z

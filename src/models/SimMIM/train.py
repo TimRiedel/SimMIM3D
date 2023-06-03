@@ -26,11 +26,8 @@ if __name__ == "__main__":
         dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
     )
     
-    loss_fn = nn.MSELoss() 
-
     model = MAE(
         net = network,
-        loss_fn=loss_fn,
         learning_rate=cfg.TRAINING.BASE_LR,
         optimizer_class=torch.optim.AdamW,
         weight_decay=cfg.TRAINING.WEIGHT_DECAY,

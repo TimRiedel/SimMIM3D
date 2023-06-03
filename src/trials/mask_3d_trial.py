@@ -24,7 +24,7 @@ img_size = (input_size, input_size, input_size)
 in_chans = 4
 embed_dim = 768
 patch_size = 16
-model_patch_size = 1
+model_patch_size = 16
 
 transform = Compose([
     LoadImaged(keys='image', ensure_channel_first=True),
@@ -34,7 +34,7 @@ transform = Compose([
     RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
     RandFlipd(keys=["image"], prob=0.5, spatial_axis=1),
     RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
-    NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
+    NormalizeIntensityd(keys="image", channel_wise=True),
     RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
     RandShiftIntensityd(keys="image", offsets=0.1, prob=1.0),
     MaskGenerator3D(),
@@ -85,11 +85,8 @@ print(f"APPLY: mask_token shape before expansion: {mask_token.shape}")
 mask_token = mask_token.expand(B, L, -1)
 print(f"APPLY: mask_token shape after expansion: {mask_token.shape}")
 print(f"APPLY: mask shape before expansion: {mask.shape}")
-w = mask.unsqueeze(-1).expand(-1, -1, 768)
-# w = mask.flatten(1)
-# print(f"APPLY: w shape after flatten: {w.shape}")
-# w = w.unsqueeze(-1).type_as(mask_token)
-print(f"APPLY: mask shape after expansion shape: {w.shape}")
+w = mask.flatten(1).unsqueeze(-1).type_as(mask_token)
+print(f"APPLY: mask shape flattening shape: {w.shape}")
 x = x * (1 - w) + mask_token * w
 print(f"APPLY: x shape: {x.shape}")
 print("\n")

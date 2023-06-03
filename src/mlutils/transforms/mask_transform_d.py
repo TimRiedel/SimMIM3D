@@ -7,12 +7,11 @@ class MaskGenerator3D(MapTransform):
             self, 
             img_size: int = 96, 
             mask_patch_size: int = 16, 
-            model_patch_size: int = 1, 
             mask_ratio: float = 0.75
         ):
         self.input_size = img_size
         self.mask_patch_size = mask_patch_size
-        self.model_patch_size = model_patch_size
+        self.model_patch_size = mask_patch_size
         self.mask_ratio = mask_ratio
         
         assert self.input_size % self.mask_patch_size == 0
@@ -28,6 +27,9 @@ class MaskGenerator3D(MapTransform):
         mask_idx = np.random.permutation(self.token_count)[:self.mask_count]
         mask = np.zeros(self.token_count, dtype=int)
         mask[mask_idx] = 1
+
+        mask = mask.reshape((self.rand_size, self.rand_size, self.rand_size))
+        mask = mask.repeat(self.scale, axis=0).repeat(self.scale, axis=1).repeat(self.scale, axis=2)
 
         d = dict(data)
         d['mask'] = torch.tensor(mask, dtype=torch.float32)

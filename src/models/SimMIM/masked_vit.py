@@ -26,9 +26,10 @@ class MaskedViT3D(ViT):
 
 
     def apply_mask(self, x, mask):
+        # Source: https://github.com/microsoft/SimMIM/blob/main/models/simmim.py
         B, T, _ = x.shape
         mask_token = self.mask_token.expand(B, T, -1)
-        w = mask.unsqueeze(-1).expand(-1, -1, 768)
+        w = mask.flatten(1).unsqueeze(-1).type_as(mask_token)
         x = x * (1 - w) + mask_token * w
         return x
 
