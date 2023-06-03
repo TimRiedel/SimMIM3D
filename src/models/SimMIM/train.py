@@ -16,6 +16,9 @@ if __name__ == "__main__":
     cfg.freeze()
     print(cfg)
 
+    if torch.cuda.get_device_name() == "NVIDIA A40":
+        torch.set_float32_matmul_precision('medium')
+
     network = SimMIM3D(
         img_size=cfg.DATA.IMG_SIZE,
         in_channels=cfg.MODEL.IN_CHANNELS,
@@ -23,7 +26,6 @@ if __name__ == "__main__":
         dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
     )
     
-    # TODO: observe if reduction="none" is necessary
     loss_fn = nn.MSELoss() 
 
     model = MAE(
