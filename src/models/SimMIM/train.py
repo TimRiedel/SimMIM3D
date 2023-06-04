@@ -60,7 +60,10 @@ if __name__ == "__main__":
         log_model="all",
     )
 
-    callbacks = ModelCheckpoint(dirpath=cfg.LOGGING.CHECKPOINT_DIR, monitor="validation/loss")
+    callbacks = [
+        # EarlyStopping(monitor="validation/loss", patience=20),
+        ModelCheckpoint(dirpath=cfg.LOGGING.CHECKPOINT_DIR, monitor="validation/loss")
+    ]
 
     trainer = pl.Trainer(
         # Compute

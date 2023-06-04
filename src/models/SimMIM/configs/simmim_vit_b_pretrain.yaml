@@ -1,7 +1,7 @@
 LOGGING:
-    RUN_NAME: SimMIM3D_PT_Brats_v1
+    RUN_NAME: SimMIM3D_PT_Brats_v2
     WANDB_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/wandb
-    CHECKPOINT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats
+    CHECKPOINT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2
 DATA:
     BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 96
@@ -16,7 +16,7 @@ TRAINING:
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
-    ENCODER_DROPOUT: 0.2
+    ENCODER_DROPOUT: 0.1
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

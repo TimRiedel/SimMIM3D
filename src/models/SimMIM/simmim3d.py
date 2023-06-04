@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Sequence, Union
 
+from src.mlutils.layers import PixelShuffle3D
 from src.models.SimMIM.masked_vit import MaskedViT3D
 
 class SimMIM3D(nn.Module):
@@ -32,11 +32,11 @@ class SimMIM3D(nn.Module):
             dropout_rate=dropout_rate,
         )
 
-        self.decoder = nn.ConvTranspose3d(
-            in_channels=self.embed_dim,
-            out_channels=self.in_channels,
-            kernel_size=self.patch_size,
-            stride=self.encoder_stride,
+        self.decoder = nn.Sequential(
+            nn.Conv3d(
+                in_channels=self.embed_dim,
+                out_channels=self.encoder_stride ** 3 * self.in_channels, kernel_size=1),
+            PixelShuffle3D(self.encoder_stride),
         )
 
     def reshape_3d(self, x):
