@@ -60,7 +60,7 @@ class BratsImageModule(pl.LightningDataModule):
             SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
             NormalizeIntensityd(keys="image", channel_wise=True),
-            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
         ])
 
 

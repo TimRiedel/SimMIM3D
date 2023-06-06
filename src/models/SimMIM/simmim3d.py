@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from monai.networks.blocks.upsample import SubpixelUpSample
+
 
 from src.mlutils.layers import PixelShuffle3D
 from src.models.SimMIM.masked_vit import MaskedViT3D
@@ -32,11 +34,12 @@ class SimMIM3D(nn.Module):
             dropout_rate=dropout_rate,
         )
 
-        self.decoder = nn.Sequential(
-            nn.Conv3d(
-                in_channels=self.embed_dim,
-                out_channels=self.encoder_stride ** 3 * self.in_channels, kernel_size=1),
-            PixelShuffle3D(self.encoder_stride),
+        self.decoder = SubpixelUpSample(
+            spatial_dims=3,
+            in_channels=self.embed_dim,
+            out_channels=4,
+            scale_factor=self.encoder_stride,
+            conv_block="default"
         )
 
     def reshape_3d(self, x):

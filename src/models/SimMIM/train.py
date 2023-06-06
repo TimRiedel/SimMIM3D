@@ -74,7 +74,7 @@ if __name__ == "__main__":
         precision=cfg.SYSTEM.PRECISION, 
 
         # Training
-        max_epochs=cfg.TRAINING.EPOCHS,
+        max_epochs=cfg.TRAINING.EPOCHS + cfg.TRAINING.WARMUP_EPOCHS,
 
         # Logging
         callbacks=callbacks,
