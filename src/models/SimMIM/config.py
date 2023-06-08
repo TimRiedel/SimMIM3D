@@ -21,12 +21,12 @@ _C.SYSTEM.PRECISION = "16-mixed"
 
 
 _C.LOGGING = CN()
+# Version of the model
+_C.LOGGING.VERSION = "1"
 # Name of the run
-_C.LOGGING.RUN_NAME = "SimMIM3D_PT_Brats"
-# Directory for wandb logs
-_C.LOGGING.WANDB_DIR = f"{HOME_DIR}/jobs/wandb"
-# Directory for saving checkpoints
-_C.LOGGING.CHECKPOINT_DIR = f"{HOME_DIR}/jobs/checkpoints/SimMIM3D_PT_Brats"
+_C.LOGGING.RUN_NAME = "SimMIM3D_PT"
+# Directory for jobs (checkpoints, logs, etc.)
+_C.LOGGING.JOBS_DIR = f"{HOME_DIR}/jobs"
 
 
 _C.DATA = CN()
@@ -51,6 +51,8 @@ _C.TRAINING.WEIGHT_DECAY = 0.01
 _C.TRAINING.WARMUP_EPOCHS = 100
 # Number of epochs to train for
 _C.TRAINING.EPOCHS = 900
+# Number of cross validations / folds to run
+_C.TRAINING.CROSS_VALIDATIONS = 1
 
 
 _C.MODEL = CN()

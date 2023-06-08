@@ -1,7 +1,7 @@
 LOGGING:
-    RUN_NAME: SimMIM3D_PT_Brats_v2.2.1
-    WANDB_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/wandb
-    CHECKPOINT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.1
+    VERSION: "2.2.2"
+    RUN_NAME: SimMIM3D_PT_Brats
+    JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
@@ -13,6 +13,7 @@ TRAINING:
     WEIGHT_DECAY: 0.005
     WARMUP_EPOCHS: 50
     EPOCHS: 400
+    CROSS_VALIDATIONS: 1
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
