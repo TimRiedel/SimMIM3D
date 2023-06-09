@@ -3,9 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from monai.networks.blocks.upsample import SubpixelUpSample
 
-
-from src.mlutils.layers import PixelShuffle3D
-from src.models.SimMIM.masked_vit import MaskedViT3D
+from src.SimMIM3D.networks.masked_vit import MaskedViT3D
 
 class SimMIM3D(nn.Module):
     def __init__(

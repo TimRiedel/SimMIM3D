@@ -5,8 +5,10 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 
-from src.models.SimMIM import MAE, SimMIM3D, BratsImageModule 
-from src.models.SimMIM.config import get_config, convert_cfg_to_dict
+from src.SimMIM3D.networks import SimMIM3D
+from src.SimMIM3D.data import BratsImageModule
+from src.SimMIM3D.models import PretrainSimMIM
+from src.SimMIM3D.config import get_config, convert_cfg_to_dict
 
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -27,7 +29,7 @@ if __name__ == "__main__":
             dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
         )
         
-        model = MAE(
+        model = PretrainSimMIM(
             net = network,
             learning_rate=cfg.TRAINING.BASE_LR,
             optimizer_class=torch.optim.AdamW,

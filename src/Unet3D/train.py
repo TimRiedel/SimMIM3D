@@ -5,9 +5,8 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from monai.losses import DiceLoss
 from monai.networks.nets import UNet
 
-from src.models.Unet3D.config import *
-from src.models.Unet3D.brats_data_module import BratsDataModule
-from src.models.Unet3D.model import Unet3D
+from src.Unet3D.config import *
+from src.Unet3D import BratsDataModule, Unet3D
 from src.mlutils.callbacks import LogValidationPredictions
 
 import warnings

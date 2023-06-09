@@ -3,7 +3,7 @@ import wandb
 from monai.metrics import PSNRMetric
 from monai.optimizers import WarmupCosineSchedule
 
-class MAE(pl.LightningModule):
+class PretrainSimMIM(pl.LightningModule):
     def __init__(
             self,
             net,

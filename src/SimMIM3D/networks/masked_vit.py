@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import Sequence, Union
-from monai.networks.nets import ViT
+from monai.networks.nets import ViT, Unet
 
 class MaskedViT3D(ViT):
     def __init__(

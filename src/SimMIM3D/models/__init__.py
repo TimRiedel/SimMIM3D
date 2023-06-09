@@ -1,0 +1,1 @@
+from .simmim_pretrain import PretrainSimMIM
