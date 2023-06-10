@@ -84,3 +84,4 @@ class PretrainSimMIM(pl.LightningModule):
         x, mask = self.prepare_batch(batch)
         loss, x_pred = self.net(x, mask)
         return x_pred
+

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import Sequence, Union
-from monai.networks.nets import ViT, Unet
+from monai.networks.nets import ViT
 
 class MaskedViT3D(ViT):
     def __init__(
@@ -22,6 +22,9 @@ class MaskedViT3D(ViT):
             pos_embed=pos_embed,
         )
 
+        self.in_channels = in_channels
+        self.patch_size = patch_size
+        self.hidden_size = embed_dim
         self.mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
 

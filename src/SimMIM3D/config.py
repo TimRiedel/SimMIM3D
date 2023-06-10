@@ -64,10 +64,15 @@ _C.MODEL.PATCH_SIZE = 16
 _C.MODEL.ENCODER_DROPOUT = 0.0
 
 
-def get_config():
-    """Get a yacs CfgNode object with default values for my_project."""
+def get_config(args = None):
+    """Get a yacs CfgNode object with values for pre-training or fine-tuning."""
     path = pathlib.Path(__file__).parent.resolve()
-    _C.merge_from_file(f"{str(path)}/configs/simmim_vit_b_pretrain.yaml")
+
+    if args.finetune:
+        _C.merge_from_file(f"{str(path)}/configs/simmim_vit_finetune.yaml")
+    else:
+        _C.merge_from_file(f"{str(path)}/configs/simmim_vit_pretrain.yaml")
+    
     return _C.clone()
 
 

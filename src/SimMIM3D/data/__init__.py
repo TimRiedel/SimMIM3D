@@ -1,1 +1,1 @@
-from .brats_image_module import BratsImageModule
+from .build import build_data

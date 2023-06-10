@@ -6,7 +6,7 @@ DATA:
     BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
     BATCH_SIZE: 16
-    NUM_WORKERS: 16
+    NUM_WORKERS: 32
     MASK_RATIO: 0.7
 TRAINING:
     BASE_LR: 3e-4
