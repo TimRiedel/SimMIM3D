@@ -58,6 +58,7 @@ def main(config, is_pretrain=True):
 
             # Training
             max_epochs=config.TRAINING.EPOCHS + config.TRAINING.WARMUP_EPOCHS,
+            fast_dev_run=True,
 
             # Logging
             callbacks=callbacks,

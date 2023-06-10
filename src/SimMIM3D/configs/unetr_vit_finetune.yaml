@@ -1,13 +1,13 @@
 LOGGING:
-    VERSION: "3.0"
-    RUN_NAME: SimMIM3D_PT_Brats
+    VERSION: "1.0.0"
+    RUN_NAME: UNETR_FT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
+    NUM_CLASSES: 3
     BATCH_SIZE: 16
-    NUM_WORKERS: 32
-    MASK_RATIO: 0.7
+    NUM_WORKERS: 16
 TRAINING:
     BASE_LR: 3e-4
     WEIGHT_DECAY: 0.005

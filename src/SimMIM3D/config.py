@@ -34,6 +34,8 @@ _C.DATA = CN()
 _C.DATA.BRATS_DATA_DIR = f"{HOME_DIR}/data/BraTS2017"
 # Input image size in one dimension
 _C.DATA.IMG_SIZE = 96
+# Number of classes for multilabel segmentation
+_C.DATA.NUM_CLASSES = 4
 # Batch size for a single GPU
 _C.DATA.BATCH_SIZE = 8
 # Number of data loading threads
@@ -69,7 +71,7 @@ def get_config(args = None):
     path = pathlib.Path(__file__).parent.resolve()
 
     if args.finetune:
-        _C.merge_from_file(f"{str(path)}/configs/simmim_vit_finetune.yaml")
+        _C.merge_from_file(f"{str(path)}/configs/unetr_vit_finetune.yaml")
     else:
         _C.merge_from_file(f"{str(path)}/configs/simmim_vit_pretrain.yaml")
     

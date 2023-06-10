@@ -1,8 +1,9 @@
-from .brats_image_module import BratsImageModule
+from .brats_image_data import BratsImageData
+from .brats_data import BratsData
 
 def build_data(config, is_pretrain=True):
     if is_pretrain:
-        return BratsImageModule(
+        return BratsImageData(
             data_dir=config.DATA.BRATS_DATA_DIR,
             img_size=config.DATA.IMG_SIZE,
             patch_size=config.MODEL.PATCH_SIZE,
@@ -11,4 +12,9 @@ def build_data(config, is_pretrain=True):
             num_workers=config.DATA.NUM_WORKERS
         ) 
     else:
-        raise NotImplementedError("Finetuning is not implemented yet.")
+        return BratsData(
+            data_dir=config.DATA.BRATS_DATA_DIR,
+            img_size=config.DATA.IMG_SIZE,
+            batch_size=config.DATA.BATCH_SIZE,
+            num_workers=config.DATA.NUM_WORKERS
+        )
