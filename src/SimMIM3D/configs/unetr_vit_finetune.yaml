@@ -18,7 +18,8 @@ MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
     ENCODER_DROPOUT: 0.1
-    CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.3/epoch=396-step=5161.ckpt' 
+    USE_PRETRAINED_VIT: True
+    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.3/epoch=396-step=5161.ckpt' 
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

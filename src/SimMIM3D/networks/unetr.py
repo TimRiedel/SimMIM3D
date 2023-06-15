@@ -31,13 +31,13 @@ class UNETR3D(UNETR):
  
 
 def build_unetr(cfg):
-    if cfg.MODEL.CKPT_PATH != "":
-        checkpoint = torch.load(cfg.MODEL.CKPT_PATH)
+    if cfg.MODEL.USE_PRETRAINED_VIT and cfg.MODEL.ENCODER_CKPT_PATH != "":
+        checkpoint = torch.load(cfg.MODEL.ENCODER_CKPT_PATH)
         state_dict = checkpoint["state_dict"]
 
         # assert that the checkpoint has keys starting with 'net.encoder'
         if not any([k.startswith('net.encoder') for k in state_dict.keys()]):
-            raise ValueError(f"Checkpoint at {cfg.MODEL.CKPT_PATH} does not contain a compatible ViT encoder whichs states are starting with 'net.encoder.'")
+            raise ValueError(f"Checkpoint at {cfg.MODEL.ENCODER_CKPT_PATH} does not contain a compatible ViT encoder whichs states are starting with 'net.encoder.'")
         encoder_weights = {k.replace('net.encoder.', ''): v for k, v in state_dict.items() if k.startswith('net.encoder.')}
     else:
         encoder_weights = None
@@ -48,5 +48,6 @@ def build_unetr(cfg):
         img_size=cfg.DATA.IMG_SIZE,
         feature_size=cfg.MODEL.PATCH_SIZE,
         dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
-        encoder_weights=encoder_weights
+        freeze_encoder=cfg.MODEL.USE_PRETRAINED_VIT,
+        encoder_weights=encoder_weights,
     )
