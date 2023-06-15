@@ -1,7 +1,5 @@
 import pytorch_lightning as pl
-import torchmetrics
-import wandb
-from monai.metrics import PSNRMetric
+from torchmetrics import Accuracy, Dice
 from monai.optimizers import WarmupCosineSchedule
 
 class FinetuneUNETR(pl.LightningModule):
@@ -26,10 +24,11 @@ class FinetuneUNETR(pl.LightningModule):
         self.epochs = epochs
         self.num_classes = num_classes
 
-        self.train_accuracy = torchmetrics.Accuracy(task="multilabel", num_labels=self.num_classes)
-        self.val_accuracy = torchmetrics.Accuracy(task="multilabel", num_labels=self.num_classes)
-        self.train_dice_score = torchmetrics.Dice(task="multilabel", num_labels=self.num_classes)
-        self.val_dice_score = torchmetrics.Dice(task="multilabel", num_labels=self.num_classes)
+        self.train_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
+        self.val_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
+        # TODO: Add dice score for each class, as it is calculated across classes right now
+        self.train_dice_score = Dice()
+        self.val_dice_score = Dice()
 
         # Logging
         self.save_hyperparameters(ignore=["net", "learning_rate", "loss_fn"])
@@ -57,36 +56,38 @@ class FinetuneUNETR(pl.LightningModule):
         x, y = self.prepare_batch(batch)
         y_pred = self.net(x)
         loss = self.loss_fn(y_pred, y)
-        return loss, y_pred, y
+        return loss, y_pred
 
 
     # Training
     def training_step(self, batch, batch_idx):
-        loss, y_pred, y = self.common_step(batch, batch_idx) 
+        loss, y_pred = self.common_step(batch, batch_idx) 
         return {"loss": loss, "y_pred": y_pred}
     
-    # def on_train_batch_end(self, outputs, batch, batch_idx):
-    #     self.log("training/loss", outputs["loss"], on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
-    
+    def on_train_batch_end(self, outputs, batch, batch_idx):
+        self.train_accuracy(outputs["y_pred"], batch["label"])
+        self.train_dice_score(outputs["y_pred"], batch["label"])
+
+        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
+        self.log("training/accuracy", self.train_accuracy, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("training/dice_score", self.train_dice_score, on_step=False, on_epoch=True, sync_dist=True)
+
 
     # Validation
     def validation_step(self, batch, batch_idx):
-        loss, y_pred, y = self.common_step(batch, batch_idx) 
+        loss, y_pred = self.common_step(batch, batch_idx) 
         return {"loss": loss, "y_pred": y_pred}
 
-    # def on_validation_batch_end(self, outputs, batch, batch_idx):
-    #     self.log("validation/loss", outputs["loss"], on_step=True, sync_dist=True, batch_size=batch["image"].shape[0])
+    def on_validation_batch_end(self, outputs, batch, batch_idx):
+        self.val_accuracy(outputs["y_pred"], batch["label"])
+        self.val_dice_score(outputs["y_pred"], batch["label"])
 
-    #     if batch_idx == 0:
-    #         slice_idx = batch["image"].shape[4] // 2
-    #         images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
-    #         reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
-
-    #         self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]})
-    #         self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]})
-
+        self.log("validation/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
+        self.log("validation/accuracy", self.val_accuracy, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("validation/dice_score", self.val_dice_score, on_step=False, on_epoch=True, sync_dist=True)
+    
 
     # Testing
     def test_step(self, batch, batch_idx):
-        loss, y_pred, y = self.common_step(batch, batch_idx) 
+        loss, y_pred = self.common_step(batch, batch_idx) 
         return {"loss": loss, "y_pred": y_pred}
