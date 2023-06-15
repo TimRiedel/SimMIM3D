@@ -28,8 +28,11 @@ class MaskedViT3D(ViT):
         self.mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
 
-    def apply_mask(self, x, mask):
+    def apply_mask(self, x, mask=None):
         # Source: https://github.com/microsoft/SimMIM/blob/main/models/simmim.py
+        if mask is None:
+            return x
+        
         B, T, _ = x.shape
         mask_token = self.mask_token.expand(B, T, -1)
         w = mask.flatten(1).unsqueeze(-1).type_as(mask_token)
@@ -43,7 +46,7 @@ class MaskedViT3D(ViT):
         x = self.norm(x)
         return x
 
-    def forward(self, x, mask):
+    def forward(self, x, mask=None):
         x = self.patch_embedding(x)
         x = self.apply_mask(x, mask)
         x = self.forward_embedding(x)

@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from monai.networks.blocks.upsample import SubpixelUpSample
@@ -9,21 +8,13 @@ class SimMIM3D(nn.Module):
     def __init__(
         self, 
         encoder: nn.Module,
-        encoder_stride: int,
+        decoder: nn.Module,
 
     ) -> None :
         super().__init__()
 
         self.encoder = encoder
-        self.encoder_stride = encoder_stride
-
-        self.decoder = SubpixelUpSample(
-            spatial_dims=3,
-            in_channels=self.encoder.hidden_size,
-            out_channels=self.encoder.in_channels,
-            scale_factor=self.encoder_stride,
-            conv_block="default"
-        )
+        self.decoder = decoder
 
     def reshape_3d(self, x):
         B, T, E = x.shape
@@ -31,13 +22,13 @@ class SimMIM3D(nn.Module):
         x = x.permute(0, 2, 1)
         x = x.reshape(B, E, H, W, D)
         return x
-
     
-    def forward(self, x, mask):
+    def forward(self, x, mask=None):
         z = self.encoder(x, mask)
         z = self.reshape_3d(z)
         x_rec = self.decoder(z)
 
+        # TODO: handle case of mask=None
         patch_size = self.encoder.patch_size
         mask = mask.repeat_interleave(patch_size[0], 1).repeat_interleave(patch_size[1], 2).repeat_interleave(patch_size[2], 3).unsqueeze(1).contiguous()
         loss_recon = F.l1_loss(x, x_rec, reduction='none')
@@ -53,8 +44,15 @@ def build_simmim(cfg):
         dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
     )
 
+    decoder = SubpixelUpSample(
+        spatial_dims=3,
+        in_channels=encoder.hidden_size,
+        out_channels=encoder.in_channels,
+        scale_factor=cfg.MODEL.PATCH_SIZE,
+        conv_block="default"
+    )
     
     return SimMIM3D(
         encoder=encoder,
-        encoder_stride=cfg.MODEL.PATCH_SIZE, 
+        decoder=decoder
     )
