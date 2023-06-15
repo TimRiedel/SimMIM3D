@@ -15,14 +15,14 @@ import warnings
 
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
 
-def main(config, is_pretrain=True):
+def main(config, is_pretrain=True, dev_run=False):
     for k in range(config.TRAINING.CROSS_VALIDATIONS):
         network = build_network(config, is_pretrain=is_pretrain)
         model = build_model(config, network, is_pretrain=is_pretrain)
         data = build_data(config, is_pretrain=is_pretrain)
 
         run_name = f"{config.LOGGING.RUN_NAME}_v{config.LOGGING.VERSION}"
-        wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/wandb"
+        wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
         ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{run_name}"
         if config.TRAINING.CROSS_VALIDATIONS > 1:
             run_name = f"{run_name}_cv_{k}"
@@ -36,13 +36,15 @@ def main(config, is_pretrain=True):
             "NUM_WORKERS": config.DATA.NUM_WORKERS,
         }
 
-        logger = WandbLogger(
-            project="ba-thesis",
-            name=run_name,
-            dir=wandb_log_dir,
-            config=wandb_config,
-            log_model="all",
-        )
+        logger = None
+        if not dev_run:
+            logger = WandbLogger(
+                project="ba-thesis",
+                name=run_name,
+                save_dir=wandb_log_dir,
+                config=wandb_config,
+                log_model="all",
+            )
 
         callbacks = [
             ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss")
@@ -58,7 +60,7 @@ def main(config, is_pretrain=True):
 
             # Training
             max_epochs=config.TRAINING.EPOCHS + config.TRAINING.WARMUP_EPOCHS,
-            fast_dev_run=True,
+            fast_dev_run=dev_run,
 
             # Logging
             callbacks=callbacks,
@@ -73,6 +75,7 @@ def parse_options():
     parser = argparse.ArgumentParser('SimMIM3D script', add_help=False)
 
     parser.add_argument('--finetune', action='store_true', help="finetune only the decoder without pre-training")
+    parser.add_argument('--quick', action='store_true', help="quick run for debugging purposes")
 
     args = parser.parse_args()
 
@@ -91,4 +94,4 @@ if __name__ == "__main__":
     if torch.cuda.get_device_name() == "NVIDIA A40":
         torch.set_float32_matmul_precision('medium')
 
-    main(config, is_pretrain)
+    main(config, is_pretrain, dev_run=args.quick)
