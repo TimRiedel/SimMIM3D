@@ -36,9 +36,9 @@ class PretrainSimMIM(pl.LightningModule):
         lr_scheduler = WarmupCosineSchedule(
             optimizer=optimizer,
             warmup_steps=self.warmup_epochs,
-            t_total=self.epochs
+            t_total=self.epochs + self.warmup_epochs
         )
-        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler}
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": lr_scheduler, "interval": "epoch"}}
 
     def prepare_batch(self, batch):
         return batch["image"], batch["mask"]

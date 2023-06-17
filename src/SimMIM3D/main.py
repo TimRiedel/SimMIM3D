@@ -3,7 +3,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 import argparse
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 
 from src.SimMIM3D.config import get_config, convert_cfg_to_dict
@@ -48,7 +48,10 @@ def main(config, is_pretrain=True, dev_run=False):
                 log_model="all",
             )
 
-        callbacks: list[pl.Callback] = [ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss")]
+        callbacks: list[pl.Callback] = [
+            ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
+            LearningRateMonitor(logging_interval="epoch"),
+        ]
         if not is_pretrain:
             callbacks.append(
                 LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE)

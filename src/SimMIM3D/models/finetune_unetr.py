@@ -39,6 +39,8 @@ class FinetuneUNETR(pl.LightningModule):
 
 
     def configure_optimizers(self):
+        # TODO: Consider layer-wise learning rate decay (layer decay ratio = 0.75) to
+        # stabilize the ViT training as suggested in "Self-Pretraining with MAE"
         optimizer = self.optimizer_class(
             self.parameters(), 
             lr=self.learning_rate, 
@@ -48,9 +50,9 @@ class FinetuneUNETR(pl.LightningModule):
         lr_scheduler = WarmupCosineSchedule(
             optimizer=optimizer,
             warmup_steps=self.warmup_epochs,
-            t_total=self.epochs
+            t_total=self.epochs + self.warmup_epochs
         )
-        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler}
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": lr_scheduler, "interval": "epoch"}}
 
     def prepare_batch(self, batch):
         return batch["image"], batch["label"]
