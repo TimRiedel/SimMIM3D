@@ -16,10 +16,10 @@ def plot_image_file(img):
 def plot_segmentation_file(seg):
     print(f"segmentation shape: {seg.shape}")
     plt.figure("segmentation", (24, 6))
-    for i in range(4):
-        plt.subplot(1, 4, i + 1)
+    for i in range(seg.shape[0]):
+        plt.subplot(1, seg.shape[0], i + 1)
         plt.title(f"Segmentation channel {i}")
-        plt.imshow(seg[i, :, :, 60].detach().cpu())
+        plt.imshow(seg[i, :, :, 81].detach().cpu())
     plt.show()
     plt.savefig('segmentation.png')
     print("Segmentation saved")

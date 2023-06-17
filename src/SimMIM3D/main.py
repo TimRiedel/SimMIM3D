@@ -13,6 +13,8 @@ from src.SimMIM3D.data import build_data
 
 import warnings
 
+from src.mlutils.callbacks import LogBratsValidationPredictions
+
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
 
 def main(config, is_pretrain=True, dev_run=False):
@@ -46,9 +48,11 @@ def main(config, is_pretrain=True, dev_run=False):
                 log_model="all",
             )
 
-        callbacks = [
-            ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss")
-        ]
+        callbacks: list[pl.Callback] = [ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss")]
+        if not is_pretrain:
+            callbacks.append(
+                LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE)
+            )
 
         trainer = pl.Trainer(
             # Compute
@@ -87,6 +91,8 @@ def parse_options():
 
 
 if __name__ == "__main__":
+    pl.seed_everything(1)
+
     args, config = parse_options()
     is_pretrain = not args.finetune
 

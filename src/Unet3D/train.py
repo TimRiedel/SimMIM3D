@@ -7,7 +7,7 @@ from monai.networks.nets import UNet
 
 from src.Unet3D.config import *
 from src.Unet3D import BratsDataModule, Unet3D
-from src.mlutils.callbacks import LogValidationPredictions
+from src.mlutils.callbacks import LogBratsValidationPredictions
 
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -49,10 +49,10 @@ if __name__ == "__main__":
         num_workers=NUM_WORKERS
     )
 
-    callbacks = [
+    callbacks: list[pl.Callback] = [
         # EarlyStopping(monitor="val_loss", patience=5),
         # ModelCheckpoint(monitor="val_accuracy", mode="max"),
-        LogValidationPredictions(),
+        LogBratsValidationPredictions(num_samples=BATCH_SIZE),
     ]
 
     logger = WandbLogger(project="ba-thesis", name="Unet3D Brats", log_model="all")

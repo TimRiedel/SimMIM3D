@@ -1,12 +1,12 @@
 import pytorch_lightning as pl
 from torchmetrics import Accuracy, Dice
 from monai.optimizers import WarmupCosineSchedule
+from monai.losses import DiceLoss
 
 class FinetuneUNETR(pl.LightningModule):
     def __init__(
             self,
             net,
-            loss_fn,
             learning_rate: float, 
             optimizer_class,
             weight_decay: float,
@@ -16,13 +16,17 @@ class FinetuneUNETR(pl.LightningModule):
         ):
         super().__init__()
         self.net = net
-        self.loss_fn = loss_fn
         self.learning_rate = learning_rate
         self.optimizer_class = optimizer_class
         self.weight_decay = weight_decay
         self.warmup_epochs = warmup_epochs
         self.epochs = epochs
         self.num_classes = num_classes
+
+        self.loss_fn = DiceLoss(
+            squared_pred=True, 
+            softmax=True,
+        )
 
         self.train_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
         self.val_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
@@ -32,8 +36,7 @@ class FinetuneUNETR(pl.LightningModule):
 
         # Logging
         self.save_hyperparameters(ignore=["net", "learning_rate", "loss_fn"])
-        self.num_samples = 10
-        self.channel_idx = 0
+
 
     def configure_optimizers(self):
         optimizer = self.optimizer_class(
@@ -65,10 +68,10 @@ class FinetuneUNETR(pl.LightningModule):
         return {"loss": loss, "y_pred": y_pred}
     
     def on_train_batch_end(self, outputs, batch, batch_idx):
-        self.train_accuracy(outputs["y_pred"], batch["label"])
-        self.train_dice_score(outputs["y_pred"], batch["label"])
+        self.train_accuracy(outputs["y_pred"], batch["label"]) # type: ignore
+        self.train_dice_score(outputs["y_pred"], batch["label"]) # type: ignore
 
-        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
+        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
         self.log("training/accuracy", self.train_accuracy, on_step=False, on_epoch=True, sync_dist=True)
         self.log("training/dice_score", self.train_dice_score, on_step=False, on_epoch=True, sync_dist=True)
 
