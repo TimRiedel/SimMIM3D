@@ -51,7 +51,7 @@ class PretrainSimMIM(pl.LightningModule):
         return {"loss": loss, "x_pred": x_pred}
     
     def on_train_batch_end(self, outputs, batch, batch_idx):
-        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
+        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
     
 
     # Validation
@@ -65,12 +65,13 @@ class PretrainSimMIM(pl.LightningModule):
 
         if batch_idx == 0:
             slice_idx = batch["image"].shape[4] // 2
-            images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
-            reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
 
             if self.current_epoch == 0:
-                self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]})
-            self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]})
+                images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
+                self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]}) # type: ignore
+
+            reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
+            self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]}) # type: ignore
 
 
     # Testing
