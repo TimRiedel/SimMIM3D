@@ -1,3 +1,3 @@
-from .combine_brats_channels import CombineBraTSChannels
+from .convert_to_brats_classes import ConvertToBratsClassesd
 from .map_sequential_channels import MapToSequentialChannels, MapToSequentialChannelsd
 from .mask_transform_d import MaskGenerator3D

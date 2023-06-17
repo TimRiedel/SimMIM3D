@@ -17,6 +17,8 @@ from monai.transforms import (
     RandSpatialCropd,
 )
 
+from src.mlutils.transforms import ConvertToBratsClassesd
+
 class BratsData(pl.LightningDataModule):
     def __init__(
             self,
@@ -39,7 +41,7 @@ class BratsData(pl.LightningDataModule):
             LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
-            ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
+            ConvertToBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
@@ -55,7 +57,7 @@ class BratsData(pl.LightningDataModule):
             LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image", "label"]),
-            ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
+            ConvertToBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
