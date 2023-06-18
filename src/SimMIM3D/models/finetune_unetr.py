@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 from torchmetrics import Accuracy, Dice
 from monai.optimizers import WarmupCosineSchedule
 from monai.losses import DiceLoss
+from monai.metrics import DiceMetric
 
 class FinetuneUNETR(pl.LightningModule):
     def __init__(
@@ -30,9 +31,9 @@ class FinetuneUNETR(pl.LightningModule):
 
         self.train_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
         self.val_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
-        # TODO: Add dice score for each class, as it is calculated across classes right now
-        self.train_dice_score = Dice()
-        self.val_dice_score = Dice()
+
+        self.train_dice_score = DiceMetric(include_background=True, num_classes=self.num_classes, reduction="mean_batch")
+        self.val_dice_score = DiceMetric(include_background=True, num_classes=self.num_classes, reduction="mean_batch")
 
         # Logging
         self.save_hyperparameters(ignore=["net", "learning_rate", "loss_fn"])
@@ -75,7 +76,12 @@ class FinetuneUNETR(pl.LightningModule):
 
         self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
         self.log("training/accuracy", self.train_accuracy, on_step=False, on_epoch=True, sync_dist=True)
-        self.log("training/dice_score", self.train_dice_score, on_step=False, on_epoch=True, sync_dist=True)
+
+    def on_train_epoch_end(self):
+        dice = self.train_dice_score.aggregate()
+        for i in range(dice.shape[0]): # type: ignore
+            self.log(f"training/dice_score_{i}", dice[i], on_step=False, on_epoch=True, sync_dist=True) # type: ignore
+        self.train_dice_score.reset()
 
 
     # Validation
@@ -89,7 +95,12 @@ class FinetuneUNETR(pl.LightningModule):
 
         self.log("validation/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
         self.log("validation/accuracy", self.val_accuracy, on_step=False, on_epoch=True, sync_dist=True)
-        self.log("validation/dice_score", self.val_dice_score, on_step=False, on_epoch=True, sync_dist=True)
+
+    def on_validation_epoch_end(self):
+        dice = self.val_dice_score.aggregate()
+        for i in range(dice.shape[0]): # type: ignore
+            self.log(f"validation/dice_score_{i}", dice[i], on_step=False, on_epoch=True, sync_dist=True) # type: ignore
+        self.val_dice_score.reset()
     
 
     # Testing
