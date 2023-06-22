@@ -1,5 +1,5 @@
 LOGGING:
-    VERSION: "1.0.0"
+    VERSION: "1.2.0"
     RUN_NAME: UNETR_FT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
@@ -10,16 +10,14 @@ DATA:
     NUM_WORKERS: 16
 TRAINING:
     BASE_LR: 4e-4
-    WEIGHT_DECAY: 0.005
-    WARMUP_EPOCHS: 50
+    WEIGHT_DECAY: 0.0
+    WARMUP_EPOCHS: 0
     EPOCHS: 400
     CROSS_VALIDATIONS: 1
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
-    ENCODER_DROPOUT: 0.1
-    USE_PRETRAINED_VIT: True
-    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.3/epoch=396-step=5161.ckpt' 
+    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.5/epoch=379-step=9500.ckpt' 
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

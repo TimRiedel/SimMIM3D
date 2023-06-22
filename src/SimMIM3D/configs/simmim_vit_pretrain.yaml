@@ -1,5 +1,5 @@
 LOGGING:
-    VERSION: "3.0"
+    VERSION: "2.2.7"
     RUN_NAME: SimMIM3D_PT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
@@ -10,8 +10,8 @@ DATA:
     MASK_RATIO: 0.7
 TRAINING:
     BASE_LR: 3e-4
-    WEIGHT_DECAY: 0.005
-    WARMUP_EPOCHS: 50
+    WEIGHT_DECAY: 0.0
+    WARMUP_EPOCHS: 0
     EPOCHS: 400
     CROSS_VALIDATIONS: 1
 MODEL:
