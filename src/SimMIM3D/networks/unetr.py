@@ -11,8 +11,7 @@ class UNETR3D(UNETR):
         img_size: int,
         feature_size: int = 16,
         dropout_rate: float = 0.0,
-        freeze_encoder: bool = True,
-        encoder_weights: dict = None,
+        encoder_weights: dict | None = None,
     ) -> None :
         super().__init__(
             in_channels=in_channels,
@@ -21,17 +20,14 @@ class UNETR3D(UNETR):
             feature_size=feature_size,
             dropout_rate=dropout_rate,
         )
-        if freeze_encoder and encoder_weights is not None:
-            print("Freezing ViT encoder weights...")
+        if encoder_weights is not None:
+            print("Loading ViT encoder weights...")
             incompatible_keys = self.vit.load_state_dict(encoder_weights, strict=False)
             print(f"CAUTION: Incompatible keys detected for ViT encoder: {incompatible_keys}\n")
-
-            for param in self.vit.parameters():
-                param.requires_grad = False
  
 
 def build_unetr(cfg):
-    if cfg.MODEL.USE_PRETRAINED_VIT and cfg.MODEL.ENCODER_CKPT_PATH != "":
+    if cfg.MODEL.ENCODER_CKPT_PATH != "":
         checkpoint = torch.load(cfg.MODEL.ENCODER_CKPT_PATH)
         state_dict = checkpoint["state_dict"]
 
@@ -48,6 +44,5 @@ def build_unetr(cfg):
         img_size=cfg.DATA.IMG_SIZE,
         feature_size=cfg.MODEL.PATCH_SIZE,
         dropout_rate=cfg.MODEL.ENCODER_DROPOUT,
-        freeze_encoder=cfg.MODEL.USE_PRETRAINED_VIT,
         encoder_weights=encoder_weights,
     )

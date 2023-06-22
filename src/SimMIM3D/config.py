@@ -64,10 +64,8 @@ _C.MODEL.IN_CHANNELS = 4
 _C.MODEL.PATCH_SIZE = 16
 # Dropout rate for the encoder
 _C.MODEL.ENCODER_DROPOUT = 0.0
-# Whether to freeze the encoder weights
-_C.MODEL.USE_PRETRAINED_VIT = True
 # Path to checkpoint for finetuning
-_C.MODEL.ENCODER_CKPT_PATH = f"{HOME_DIR}/jobs/checkpoints/"
+_C.MODEL.ENCODER_CKPT_PATH = "" 
 
 
 def get_config(args = None):
