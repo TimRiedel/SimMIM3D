@@ -4,10 +4,9 @@ import wandb
 import pytorch_lightning as pl
 
 class LogBratsValidationPredictions(pl.Callback):
-    def __init__(self, num_samples, channel_idx=0):
+    def __init__(self, num_samples):
         super().__init__()
         self.num_samples = num_samples
-        self.channel_idx = channel_idx
     
     def on_validation_batch_end(
         self, trainer, pl_module, outputs, batch, batch_idx):

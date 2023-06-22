@@ -1,1 +1,1 @@
-from .log_validation_predictions import LogBratsValidationPredictions
+from .log_brats_validation_predictions import LogBratsValidationPredictions
