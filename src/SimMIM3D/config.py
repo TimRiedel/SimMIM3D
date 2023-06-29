@@ -17,7 +17,7 @@ _C.SYSTEM.DEVICES = -1
 # Number of nodes on a distributed system
 _C.SYSTEM.NODES = 1
 # Floating point precision for weights
-_C.SYSTEM.PRECISION = "16-mixed"
+_C.SYSTEM.PRECISION = "32-true"
 
 
 _C.LOGGING = CN()

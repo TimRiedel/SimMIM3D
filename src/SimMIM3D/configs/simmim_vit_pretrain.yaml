@@ -5,7 +5,7 @@ LOGGING:
 DATA:
     BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
-    BATCH_SIZE: 16
+    BATCH_SIZE: 8
     NUM_WORKERS: 32
     MASK_RATIO: 0.7
 TRAINING:
@@ -23,4 +23,3 @@ SYSTEM:
     STRATEGY: ddp
     DEVICES: -1
     NODES: 1
-    PRECISION: 16-mixed
