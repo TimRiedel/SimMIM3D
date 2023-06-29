@@ -4,10 +4,13 @@ import numpy as np
 def plot_image_file(img):
     print(f"image shape: {img.shape}")
     plt.figure("image", (24, 6))
-    for i in range(4):
-        plt.subplot(1, 4, i + 1)
-        plt.title(f"Image channel {i}")
-        plt.imshow(img[i, :, :, 60].detach().cpu(), cmap="gray")
+    if len(img.shape) == 3:
+        plt.imshow(img[:, :, 60], cmap="gray")
+    else:
+        for i in range(img.shape[0]):
+            plt.subplot(1, img.shape[0], i + 1)
+            plt.title(f"Image channel {i}")
+            plt.imshow(img[i, :, :, 60].detach().cpu(), cmap="gray")
     plt.show()
     plt.savefig('image.png')
     print("Image saved")
