@@ -1,29 +1,30 @@
 import torch
-import torch.nn as nn
+import warnings
 import pytorch_lightning as pl
 import argparse
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-
 from src.SimMIM3D.config import get_config, convert_cfg_to_dict
 from src.SimMIM3D.networks import build_network
 from src.SimMIM3D.models import build_model
 from src.SimMIM3D.data import build_data
-
-import warnings
-
 from src.mlutils.callbacks import LogBratsValidationPredictions
 
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
 
-def main(config, is_pretrain=True, dev_run=False):
+def main(
+        config, 
+        dataset="adni",
+        is_pretrain=True,
+        dev_run=False
+    ):
     for k in range(config.TRAINING.CROSS_VALIDATIONS):
+        data = build_data(config, is_pretrain=is_pretrain, dataset=dataset)
         network = build_network(config, is_pretrain=is_pretrain)
         model = build_model(config, network, is_pretrain=is_pretrain)
-        data = build_data(config, is_pretrain=is_pretrain)
 
-        run_name = f"{config.LOGGING.RUN_NAME}_v{config.LOGGING.VERSION}"
+        run_name = f"{config.LOGGING.RUN_NAME}_{config.LOGGING.VERSION}"
         wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
         ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{run_name}"
         if config.TRAINING.CROSS_VALIDATIONS > 1:
@@ -52,10 +53,8 @@ def main(config, is_pretrain=True, dev_run=False):
             ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
             LearningRateMonitor(logging_interval="epoch"),
         ]
-        if not is_pretrain:
-            callbacks.append(
-                LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE)
-            )
+        if not is_pretrain and dataset == "brats":
+            callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
 
         trainer = pl.Trainer(
             # Compute
@@ -83,6 +82,7 @@ def parse_options():
 
     parser.add_argument('--finetune', action='store_true', help="finetune only the decoder without pre-training")
     parser.add_argument('--quick', action='store_true', help="quick run for debugging purposes")
+    parser.add_argument('--dataset', type=str, choices=['brats', 'adni'], default='adni', help="dataset to use (brats or iseg)")
 
     args = parser.parse_args()
 
@@ -103,4 +103,9 @@ if __name__ == "__main__":
     if torch.cuda.get_device_name() == "NVIDIA A40":
         torch.set_float32_matmul_precision('medium')
 
-    main(config, is_pretrain, dev_run=args.quick)
+    main(
+        config=config, 
+        is_pretrain=is_pretrain, 
+        dataset=args.dataset, 
+        dev_run=args.quick
+    )

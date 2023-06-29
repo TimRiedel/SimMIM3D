@@ -30,10 +30,10 @@ _C.LOGGING.JOBS_DIR = f"{HOME_DIR}/jobs"
 
 
 _C.DATA = CN()
-# Directory for BraTS2017 dataset
-_C.DATA.BRATS_DATA_DIR = f"{HOME_DIR}/data/BraTS2017"
+# Directory for  dataset
+_C.DATA.DATA_DIR = ""
 # Input image size in one dimension
-_C.DATA.IMG_SIZE = 96
+_C.DATA.IMG_SIZE = 128
 # Number of classes for multilabel segmentation
 _C.DATA.NUM_CLASSES = 4
 # Batch size for a single GPU
@@ -72,10 +72,10 @@ def get_config(args = None):
     """Get a yacs CfgNode object with values for pre-training or fine-tuning."""
     path = pathlib.Path(__file__).parent.resolve()
 
-    if args.finetune:
-        _C.merge_from_file(f"{str(path)}/configs/unetr_vit_finetune.yaml")
+    if args.finetune: # type: ignore
+        _C.merge_from_file(f"{str(path)}/configs/unetr_finetune_brats.dataset.yaml")
     else:
-        _C.merge_from_file(f"{str(path)}/configs/simmim_vit_pretrain.yaml")
+        _C.merge_from_file(f"{str(path)}/configs/simmim_pretrain_{args.dataset}.yaml") # type: ignore
     
     return _C.clone()
 

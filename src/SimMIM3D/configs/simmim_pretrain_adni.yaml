@@ -1,12 +1,12 @@
 LOGGING:
-    VERSION: "2.2.7"
-    RUN_NAME: SimMIM3D_PT_Brats
+    VERSION: "v1"
+    RUN_NAME: SimMIM3D_PT_ADNI
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
-    BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
+    DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/ADNI
     IMG_SIZE: 128
-    BATCH_SIZE: 8
-    NUM_WORKERS: 32
+    BATCH_SIZE: 16
+    NUM_WORKERS: 16
     MASK_RATIO: 0.7
 TRAINING:
     BASE_LR: 3e-4
@@ -15,7 +15,7 @@ TRAINING:
     EPOCHS: 400
     CROSS_VALIDATIONS: 1
 MODEL:
-    IN_CHANNELS: 4
+    IN_CHANNELS: 1
     PATCH_SIZE: 16
     ENCODER_DROPOUT: 0.1
 SYSTEM:

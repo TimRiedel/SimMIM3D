@@ -1,15 +1,15 @@
 LOGGING:
-    VERSION: "1.2.5"
-    RUN_NAME: UNETR_FT_Brats
+    VERSION: "v2.2.7"
+    RUN_NAME: SimMIM3D_PT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
-    BRATS_DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
+    DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
-    NUM_CLASSES: 3
     BATCH_SIZE: 8
-    NUM_WORKERS: 16
+    NUM_WORKERS: 32
+    MASK_RATIO: 0.7
 TRAINING:
-    BASE_LR: 4e-3
+    BASE_LR: 3e-4
     WEIGHT_DECAY: 0.0
     WARMUP_EPOCHS: 0
     EPOCHS: 400
@@ -17,7 +17,7 @@ TRAINING:
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
-    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.5/epoch=379-step=9500.ckpt' 
+    ENCODER_DROPOUT: 0.1
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

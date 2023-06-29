@@ -10,7 +10,6 @@ from monai.transforms import (
     NormalizeIntensityd,
     RandAdjustContrastd,
     RandFlipd,
-    RandScaleCropd,
     RandShiftIntensityd,
     RandSpatialCropd,
     Resized,
@@ -18,6 +17,7 @@ from monai.transforms import (
 )
 
 from src.SimMIM3D.data.datasets import AdniDataset
+from seg3d.src.mlutils.transforms import MaskGenerator3D
 
 class AdniData(pl.LightningDataModule):
     def __init__(
@@ -27,6 +27,8 @@ class AdniData(pl.LightningDataModule):
             num_workers: int,
             img_size: int = 128,
             seed = 42,
+            patch_size: int = 1,
+            mask_ratio: float = 0.0
         ):
         super().__init__()
         self.data_dir = data_dir
@@ -47,6 +49,7 @@ class AdniData(pl.LightningDataModule):
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
             RandAdjustContrastd(keys=["image"], prob=0.7, gamma=(0.5, 2.5)),
             RandShiftIntensityd(keys=["image"], offsets=0.125, prob=0.7),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])
 
@@ -55,8 +58,9 @@ class AdniData(pl.LightningDataModule):
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image"]),
             NormalizeIntensityd(keys="image", channel_wise=True),
-            RandScaleCropd(keys=["image"], roi_scale=[0.95, 0.95, 0.95]),
+            RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=[128, 128, 128]),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])
 
