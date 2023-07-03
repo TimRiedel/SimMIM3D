@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
 import wandb
-from monai.metrics import PSNRMetric
+import torch.nn.functional as F
 from monai.optimizers import WarmupCosineSchedule
 
 class PretrainSimMIM(pl.LightningModule):
@@ -44,12 +44,25 @@ class PretrainSimMIM(pl.LightningModule):
     def prepare_batch(self, batch):
         return batch["image"], batch["mask"]
 
+    def common_step(self, x, mask):
+        x_rec = self.net(x, mask) 
+
+        # get masked representation of input
+        patch_size = self.net.encoder.patch_size
+        mask = mask.repeat_interleave(patch_size[0], 1).repeat_interleave(patch_size[1], 2).repeat_interleave(patch_size[2], 3).unsqueeze(1).contiguous() # type: ignore
+        x_masked = x * (1 - mask)
+
+        # calculate loss on masked patches only
+        loss_recon = F.l1_loss(x, x_rec, reduction='none')
+        loss = (loss_recon * mask).sum() / (mask.sum() + 1e-5) / self.net.encoder.in_channels
+        return loss, x_rec, x_masked
+
 
     # Training
     def training_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred, _ = self.net(x, mask)
-        return {"loss": loss, "x_pred": x_pred}
+        loss, x_rec, _ = self.common_step(x, mask)
+        return {"loss": loss, "x_rec": x_rec}
     
     def on_train_batch_end(self, outputs, batch, batch_idx):
         self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
@@ -58,8 +71,8 @@ class PretrainSimMIM(pl.LightningModule):
     # Validation
     def validation_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred, x_masked = self.net(x, mask)
-        return {"loss": loss, "x_pred": x_pred, "x_masked": x_masked}
+        loss, x_rec, x_masked = self.common_step(x, mask)
+        return {"loss": loss, "x_rec": x_rec, "x_masked": x_masked}
 
     def on_validation_batch_end(self, outputs, batch, batch_idx):
         self.log("validation/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
@@ -72,7 +85,7 @@ class PretrainSimMIM(pl.LightningModule):
                 self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]}) # type: ignore
 
             masked = outputs["x_masked"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
-            reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
+            reconstructions = outputs["x_rec"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
             self.logger.experiment.log({"validation/masked": [wandb.Image(mask) for mask in masked]}) # type: ignore
             self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]}) # type: ignore
 
@@ -80,13 +93,13 @@ class PretrainSimMIM(pl.LightningModule):
     # Testing
     def test_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.net(x, mask)
-        return {"loss": loss, "x_pred": x_pred}
+        loss, x_rec, x_masked = self.common_step(x, mask)
+        return {"loss": loss, "x_rec": x_rec, "x_masked": x_masked}
 
     
     # Prediction
     def predict_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.net(x, mask)
+        x_pred = self.net(x, mask)
         return x_pred
 

@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 from monai.networks.blocks.upsample import SubpixelUpSample
 
 from src.SimMIM3D.networks.masked_vit import MaskedViT3D
@@ -16,7 +15,7 @@ class SimMIM3D(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def reshape_3d(self, x):
+    def reshape_embedding(self, x):
         B, T, E = x.shape
         H = W = D = round(T ** (1./3.))
         x = x.permute(0, 2, 1)
@@ -25,16 +24,10 @@ class SimMIM3D(nn.Module):
     
     def forward(self, x, mask):
         z = self.encoder(x, mask)
-        z = self.reshape_3d(z)
+        z = self.reshape_embedding(z)
         x_rec = self.decoder(z)
 
-        patch_size = self.encoder.patch_size
-        mask = mask.repeat_interleave(patch_size[0], 1).repeat_interleave(patch_size[1], 2).repeat_interleave(patch_size[2], 3).unsqueeze(1).contiguous() # type: ignore
-        x_masked = x * (1 - mask)
-
-        loss_recon = F.l1_loss(x, x_rec, reduction='none')
-        loss = (loss_recon * mask).sum() / (mask.sum() + 1e-5) / self.encoder.in_channels
-        return loss, x_rec, x_masked
+        return x_rec
 
 
 def build_simmim(cfg):
