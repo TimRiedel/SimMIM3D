@@ -82,7 +82,7 @@ def parse_options():
 
     parser.add_argument('--finetune', action='store_true', help="finetune only the decoder without pre-training")
     parser.add_argument('--quick', action='store_true', help="quick run for debugging purposes")
-    parser.add_argument('--dataset', type=str, choices=['brats', 'adni'], default='adni', help="dataset to use (brats or iseg)")
+    parser.add_argument('--dataset', type=str, choices=['brats', 'adni'], default='adni', help="dataset to use (brats or adni)")
 
     args = parser.parse_args()
 

@@ -48,7 +48,7 @@ class PretrainSimMIM(pl.LightningModule):
     # Training
     def training_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.net(x, mask)
+        loss, x_pred, _ = self.net(x, mask)
         return {"loss": loss, "x_pred": x_pred}
     
     def on_train_batch_end(self, outputs, batch, batch_idx):
@@ -58,8 +58,8 @@ class PretrainSimMIM(pl.LightningModule):
     # Validation
     def validation_step(self, batch, batch_idx):
         x, mask = self.prepare_batch(batch)
-        loss, x_pred = self.net(x, mask)
-        return {"loss": loss, "x_pred": x_pred}
+        loss, x_pred, x_masked = self.net(x, mask)
+        return {"loss": loss, "x_pred": x_pred, "x_masked": x_masked}
 
     def on_validation_batch_end(self, outputs, batch, batch_idx):
         self.log("validation/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
@@ -71,7 +71,9 @@ class PretrainSimMIM(pl.LightningModule):
                 images = batch["image"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
                 self.logger.experiment.log({"validation/original": [wandb.Image(img) for img in images]}) # type: ignore
 
+            masked = outputs["x_masked"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
             reconstructions = outputs["x_pred"][:self.num_samples, self.channel_idx, :, :, slice_idx].detach().cpu()
+            self.logger.experiment.log({"validation/masked": [wandb.Image(mask) for mask in masked]}) # type: ignore
             self.logger.experiment.log({"validation/reconstruction": [wandb.Image(recon) for recon in reconstructions]}) # type: ignore
 
 

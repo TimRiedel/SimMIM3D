@@ -23,17 +23,18 @@ class SimMIM3D(nn.Module):
         x = x.reshape(B, E, H, W, D)
         return x
     
-    def forward(self, x, mask=None):
+    def forward(self, x, mask):
         z = self.encoder(x, mask)
         z = self.reshape_3d(z)
         x_rec = self.decoder(z)
 
-        # TODO: handle case of mask=None
         patch_size = self.encoder.patch_size
-        mask = mask.repeat_interleave(patch_size[0], 1).repeat_interleave(patch_size[1], 2).repeat_interleave(patch_size[2], 3).unsqueeze(1).contiguous()
+        mask = mask.repeat_interleave(patch_size[0], 1).repeat_interleave(patch_size[1], 2).repeat_interleave(patch_size[2], 3).unsqueeze(1).contiguous() # type: ignore
+        x_masked = x * (1 - mask)
+
         loss_recon = F.l1_loss(x, x_rec, reduction='none')
         loss = (loss_recon * mask).sum() / (mask.sum() + 1e-5) / self.encoder.in_channels
-        return loss, x_rec
+        return loss, x_rec, x_masked
 
 
 def build_simmim(cfg):
