@@ -19,57 +19,52 @@ def main(
         is_pretrain=True,
         dev_run=False
     ):
-    for k in range(config.TRAINING.CROSS_VALIDATIONS):
-        data = build_data(config, is_pretrain=is_pretrain, dataset=dataset)
-        network = build_network(config, is_pretrain=is_pretrain)
-        model = build_model(config, network, is_pretrain=is_pretrain)
+    data = build_data(config, is_pretrain=is_pretrain, dataset=dataset)
+    network = build_network(config, is_pretrain=is_pretrain)
+    model = build_model(config, network, is_pretrain=is_pretrain)
 
-        
-        wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
-        ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{config.LOGGING.RUN_NAME}"
-        if config.TRAINING.CROSS_VALIDATIONS > 1:
-            config.LOGGING.RUN_NAME = f"{config.LOGGING.RUN_NAME}_cv_{k}"
-            ckpt_dir = f"{ckpt_dir}/cv_{k}"
+    wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
+    ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{config.LOGGING.RUN_NAME}"
 
-        wandb_config = convert_cfg_to_dict(config)
-        wandb_config.pop("LOGGING")
+    wandb_config = convert_cfg_to_dict(config)
+    wandb_config.pop("LOGGING")
 
-        logger = None
-        if not dev_run:
-            logger = WandbLogger(
-                project="ba-thesis",
-                name=config.LOGGING.RUN_NAME,
-                save_dir=wandb_log_dir,
-                config=wandb_config,
-                log_model="all",
-            )
-
-        callbacks: list[pl.Callback] = [
-            ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
-            LearningRateMonitor(logging_interval="epoch"),
-        ]
-        if not is_pretrain and dataset == "brats":
-            callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
-
-        trainer = pl.Trainer(
-            # Compute
-            accelerator=config.SYSTEM.ACCELERATOR, 
-            strategy=config.SYSTEM.STRATEGY,
-            devices=config.SYSTEM.DEVICES,
-            num_nodes=config.SYSTEM.NODES,
-            precision=config.SYSTEM.PRECISION, 
-
-            # Training
-            max_epochs=config.TRAINING.EPOCHS + config.TRAINING.WARMUP_EPOCHS,
-            fast_dev_run=dev_run,
-
-            # Logging
-            callbacks=callbacks,
-            logger=logger,
-            profiler="simple",
+    logger = None
+    if not dev_run:
+        logger = WandbLogger(
+            project="ba-thesis",
+            name=config.LOGGING.RUN_NAME,
+            save_dir=wandb_log_dir,
+            config=wandb_config,
+            log_model="all",
         )
 
-        trainer.fit(model, data)
+    callbacks: list[pl.Callback] = [
+        ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
+        LearningRateMonitor(logging_interval="epoch"),
+    ]
+    if not is_pretrain and dataset == "brats":
+        callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
+
+    trainer = pl.Trainer(
+        # Compute
+        accelerator=config.SYSTEM.ACCELERATOR, 
+        strategy=config.SYSTEM.STRATEGY,
+        devices=config.SYSTEM.DEVICES,
+        num_nodes=config.SYSTEM.NODES,
+        precision=config.SYSTEM.PRECISION, 
+
+        # Training
+        max_epochs=config.TRAINING.EPOCHS + config.TRAINING.WARMUP_EPOCHS,
+        fast_dev_run=dev_run,
+
+        # Logging
+        callbacks=callbacks,
+        logger=logger,
+        profiler="simple",
+    )
+
+    trainer.fit(model, data)
 
 
 def parse_options():
