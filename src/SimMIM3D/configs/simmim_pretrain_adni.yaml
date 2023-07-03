@@ -1,15 +1,15 @@
 LOGGING:
-    VERSION: "v1"
+    VERSION: "v2"
     RUN_NAME: SimMIM3D_PT_ADNI
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/ADNI
     IMG_SIZE: 128
-    BATCH_SIZE: 16
-    NUM_WORKERS: 16
+    BATCH_SIZE: 32
+    NUM_WORKERS: 18
     MASK_RATIO: 0.7
 TRAINING:
-    BASE_LR: 3e-4
+    BASE_LR: 1e-4
     WEIGHT_DECAY: 0.0
     WARMUP_EPOCHS: 0
     EPOCHS: 400
