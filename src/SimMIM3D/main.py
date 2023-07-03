@@ -24,26 +24,21 @@ def main(
         network = build_network(config, is_pretrain=is_pretrain)
         model = build_model(config, network, is_pretrain=is_pretrain)
 
-        run_name = f"{config.LOGGING.RUN_NAME}_{config.LOGGING.VERSION}"
+        
         wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
-        ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{run_name}"
+        ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{config.LOGGING.RUN_NAME}"
         if config.TRAINING.CROSS_VALIDATIONS > 1:
-            run_name = f"{run_name}_cv_{k}"
+            config.LOGGING.RUN_NAME = f"{config.LOGGING.RUN_NAME}_cv_{k}"
             ckpt_dir = f"{ckpt_dir}/cv_{k}"
 
         wandb_config = convert_cfg_to_dict(config)
         wandb_config.pop("LOGGING")
-        wandb_config["SYSTEM"] = {
-            "GPU-Type": torch.cuda.get_device_name(),
-            "GPU-Count": torch.cuda.device_count(),
-            "NUM_WORKERS": config.DATA.NUM_WORKERS,
-        }
 
         logger = None
         if not dev_run:
             logger = WandbLogger(
                 project="ba-thesis",
-                name=run_name,
+                name=config.LOGGING.RUN_NAME,
                 save_dir=wandb_log_dir,
                 config=wandb_config,
                 log_model="all",
@@ -83,6 +78,9 @@ def parse_options():
     parser.add_argument('--finetune', action='store_true', help="finetune only the decoder without pre-training")
     parser.add_argument('--quick', action='store_true', help="quick run for debugging purposes")
     parser.add_argument('--dataset', type=str, choices=['brats', 'adni'], default='adni', help="dataset to use (brats or adni)")
+    parser.add_argument('--lr', type=float, default=1e-4, help="learning rate for training")
+    parser.add_argument('--mask_ratio', type=float, default=0.7, help="ratio of masked patches")
+    parser.add_argument('--name_suffix', type=str, default="", help="suffix for run name")
 
     args = parser.parse_args()
 

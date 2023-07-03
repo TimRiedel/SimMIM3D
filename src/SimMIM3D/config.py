@@ -1,4 +1,5 @@
-# my_project/config.py
+# type: ignore
+
 import os
 from yacs.config import CfgNode as CN
 import pathlib
@@ -22,9 +23,9 @@ _C.SYSTEM.PRECISION = "32-true"
 
 _C.LOGGING = CN()
 # Version of the model
-_C.LOGGING.VERSION = "1"
+_C.LOGGING.VERSION = "v1"
 # Name of the run
-_C.LOGGING.RUN_NAME = "SimMIM3D_PT"
+_C.LOGGING.RUN_NAME = "Run"
 # Directory for jobs (checkpoints, logs, etc.)
 _C.LOGGING.JOBS_DIR = f"{HOME_DIR}/jobs"
 
@@ -41,7 +42,7 @@ _C.DATA.BATCH_SIZE = 8
 # Number of data loading threads
 _C.DATA.NUM_WORKERS = 16
 # [SimMIM] Mask patch size for MaskGenerator
-_C.DATA.MASK_RATIO = 0.75
+_C.DATA.MASK_RATIO = 0.7
 
 
 _C.TRAINING = CN()
@@ -72,11 +73,21 @@ def get_config(args = None):
     """Get a yacs CfgNode object with values for pre-training or fine-tuning."""
     path = pathlib.Path(__file__).parent.resolve()
 
-    if args.finetune: # type: ignore
+    if args.finetune:
         _C.merge_from_file(f"{str(path)}/configs/unetr_finetune_brats.dataset.yaml")
     else:
-        _C.merge_from_file(f"{str(path)}/configs/simmim_pretrain_{args.dataset}.yaml") # type: ignore
-    
+        _C.merge_from_file(f"{str(path)}/configs/simmim_pretrain_{args.dataset}.yaml")
+
+    if args.lr:
+        _C.TRAINING.BASE_LR = args.lr
+    if args.mask_ratio:
+        _C.DATA.MASK_RATIO = args.mask_ratio
+
+    if args.name_suffix:
+        _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{args.name_suffix}"
+    else:
+        _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{_C.LOGGING.VERSION}"
+
     return _C.clone()
 
 
