@@ -1,4 +1,3 @@
-
 import pytorch_lightning as pl
 import torch
 from monai.data import DataLoader

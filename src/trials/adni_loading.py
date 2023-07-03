@@ -40,6 +40,18 @@ train_ds = AdniDataset(
     section="training",
     seed=42,
 )
+val_ds = AdniDataset(
+    root_dir=ADNI_DATA_PATH,
+    transform=train_transform,
+    section="validation",
+    seed=42,
+)
+test_ds = AdniDataset(
+    root_dir=ADNI_DATA_PATH,
+    transform=train_transform,
+    section="test",
+    seed=42,
+)
 
 idx = random.randint(0, len(train_ds))
 data = train_ds[idx]
