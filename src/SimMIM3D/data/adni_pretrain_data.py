@@ -18,7 +18,7 @@ from monai.transforms import (
 from src.SimMIM3D.data.datasets import AdniDataset
 from seg3d.src.mlutils.transforms import MaskGenerator3D
 
-class AdniData(pl.LightningDataModule):
+class AdniPretrainData(pl.LightningDataModule):
     def __init__(
             self,
             data_dir: str,

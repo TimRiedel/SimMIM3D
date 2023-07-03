@@ -1,11 +1,9 @@
-import numpy as np
 import pytorch_lightning as pl
 import torch
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.transforms import (
     Compose, 
-    ConvertToMultiChannelBasedOnBratsClassesd,
     EnsureChannelFirstd, 
     EnsureTyped, 
     LoadImaged, 
@@ -14,18 +12,21 @@ from monai.transforms import (
     SpatialCropd, 
     RandFlipd,
     RandScaleIntensityd,
+    RandShiftIntensityd, 
     RandSpatialCropd,
 )
 
-from src.mlutils.transforms import ConvertToBratsClassesd
+from seg3d.src.mlutils.transforms import MaskGenerator3D
 
-class BratsData(pl.LightningDataModule):
+class BratsPretrainData(pl.LightningDataModule):
     def __init__(
             self,
             data_dir: str,
             batch_size: int,
             num_workers: int,
             img_size: int = 96,
+            patch_size: int = 1,
+            mask_ratio: float = 0.0
         ):
         super().__init__()
         self.data_dir = data_dir
@@ -38,30 +39,28 @@ class BratsData(pl.LightningDataModule):
 
         self.train_transform = Compose([
             LoadImaged(keys=["image"]),
-            LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
-            ConvertToBratsClassesd(keys="label"),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
-            SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
-            RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
-            RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
-            RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
+            EnsureTyped(keys="image"),
+            Orientationd(keys="image", axcodes="RAS"),
+            SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
+            RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
+            RandFlipd(keys="image", prob=0.5, spatial_axis=0),
+            RandFlipd(keys="image", prob=0.5, spatial_axis=1),
+            RandFlipd(keys="image", prob=0.5, spatial_axis=2),
             NormalizeIntensityd(keys="image", channel_wise=True),
             RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
         ])
 
         self.val_transform = Compose([
             LoadImaged(keys=["image"]),
-            LoadImaged(keys=["label"], dtype=np.uint8),
             EnsureChannelFirstd(keys="image"),
-            EnsureTyped(keys=["image", "label"]),
-            ConvertToBratsClassesd(keys="label"),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
-            SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
+            EnsureTyped(keys="image"),
+            Orientationd(keys="image", axcodes="RAS"),
+            SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
+            RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
             NormalizeIntensityd(keys="image", channel_wise=True),
+            MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
         ])
 
 
