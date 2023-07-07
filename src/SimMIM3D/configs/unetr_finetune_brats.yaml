@@ -1,5 +1,5 @@
 LOGGING:
-    VERSION: "v2"
+    VERSION: "v3"
     RUN_NAME: UNETR_FT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
@@ -17,7 +17,7 @@ TRAINING:
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
-    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_Brats_v2.2.5/epoch=379-step=9500.ckpt' 
+    ENCODER_CKPT_PATH: '/dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints/SimMIM3D_PT_ADNI_LR_5e-4/epoch=298-step=100165.ckpt' 
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp

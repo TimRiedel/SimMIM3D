@@ -34,7 +34,18 @@ def build_unetr(cfg):
         # assert that the checkpoint has keys starting with 'net.encoder'
         if not any([k.startswith('net.encoder') for k in state_dict.keys()]):
             raise ValueError(f"Checkpoint at {cfg.MODEL.ENCODER_CKPT_PATH} does not contain a compatible ViT encoder whichs states are starting with 'net.encoder.'")
-        encoder_weights = {k.replace('net.encoder.', ''): v for k, v in state_dict.items() if k.startswith('net.encoder.')}
+        if not any([k.startswith('net.encoder.patch_embedding') for k in state_dict.keys()]):
+            raise ValueError(f"Checkpoint at {cfg.MODEL.ENCODER_CKPT_PATH} does not contain a compatible ViT encoder whichs states are starting with 'net.encoder.patch_embedding'")
+
+        # get all items that start with 'net.encoder'
+        encoder_weights = {k: v for k, v in state_dict.items() if k.startswith('net.encoder.')}
+
+        # remove prefix 'net.encoder.' from keys
+        encoder_weights = {k.replace('net.encoder.', ''): v for k, v in encoder_weights.items()}
+
+        # remove all items that start with patch_embedding
+        encoder_weights = {k: v for k, v in encoder_weights.items() if not k.startswith('patch_embedding')}
+        print(encoder_weights.keys())
     else:
         encoder_weights = None
 
