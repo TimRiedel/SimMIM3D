@@ -11,20 +11,36 @@ from monai.transforms import (
     Orientationd,
 )
 import torch
-
-from src.mlutils.plotting import plot_segmentation_file
-from src.mlutils.transforms import ConvertToBratsClassesd
+from monai.transforms import (
+    Compose, 
+    ConvertToMultiChannelBasedOnBratsClassesd,
+    EnsureChannelFirstd, 
+    EnsureTyped, 
+    LoadImaged, 
+    NormalizeIntensityd,
+    Orientationd,
+    SpatialCropd, 
+    RandFlipd,
+    RandScaleIntensityd,
+    RandSpatialCropd,
+)
 
 max_size = (192, 192, 128)
 input_size = (128, 128, 128)
 
 train_transform = Compose([
-    LoadImaged(keys=["image"]),
-    LoadImaged(keys=["label"], dtype=np.uint8),
-    EnsureChannelFirstd(keys="image"),
+    LoadImaged(keys=["image"], image_only=True),
+    LoadImaged(keys=["label"], dtype=np.uint8, image_only=True),
+    EnsureChannelFirstd(keys=["image", "label"]),
     EnsureTyped(keys=["image", "label"]),
-    ConvertToBratsClassesd(keys="label"),
     Orientationd(keys=["image", "label"], axcodes="RAS"),
+    SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
+    RandSpatialCropd(keys=["image", "label"], roi_size=(128, 128, 128), random_size=False),
+    RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
+    RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
+    RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
+    NormalizeIntensityd(keys="image", channel_wise=True),
+    RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
 ])
 
 
@@ -42,4 +58,4 @@ idx = random.randint(0, len(ds))
 data = train_ds[idx]
 img, label = data["image"], data["label"] # type: ignore
 print(label.shape)
-plot_segmentation_file(label)
+print(np.unique(label))

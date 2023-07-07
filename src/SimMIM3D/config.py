@@ -74,7 +74,7 @@ def get_config(args = None):
     path = pathlib.Path(__file__).parent.resolve()
 
     if args.finetune:
-        _C.merge_from_file(f"{str(path)}/configs/unetr_finetune_brats.dataset.yaml")
+        _C.merge_from_file(f"{str(path)}/configs/unetr_finetune_{args.dataset}.yaml")
     else:
         _C.merge_from_file(f"{str(path)}/configs/simmim_pretrain_{args.dataset}.yaml")
 

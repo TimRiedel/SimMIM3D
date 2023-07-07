@@ -43,8 +43,9 @@ def main(
         ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
         LearningRateMonitor(logging_interval="epoch"),
     ]
-    if not is_pretrain and dataset == "brats":
-        callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
+    # TODO: reenable validation prediction logging
+    # if not is_pretrain and dataset == "brats":
+    #     callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
 
     trainer = pl.Trainer(
         # Compute

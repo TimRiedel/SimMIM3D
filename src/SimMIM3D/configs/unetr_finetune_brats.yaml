@@ -1,18 +1,18 @@
 LOGGING:
-    VERSION: "v1.2.5"
+    VERSION: "v2"
     RUN_NAME: UNETR_FT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
-    NUM_CLASSES: 3
-    BATCH_SIZE: 8
-    NUM_WORKERS: 16
+    NUM_CLASSES: 4 # including background
+    BATCH_SIZE: 4 # TODO: change to 8 and avoid CUDA Out of Memory
+    NUM_WORKERS: 18
 TRAINING:
-    BASE_LR: 4e-3
+    BASE_LR: 1e-3
     WEIGHT_DECAY: 0.0
     WARMUP_EPOCHS: 0
-    EPOCHS: 400
+    EPOCHS: 100
     CROSS_VALIDATIONS: 1
 MODEL:
     IN_CHANNELS: 4

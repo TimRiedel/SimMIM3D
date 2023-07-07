@@ -1,8 +1,12 @@
 import pytorch_lightning as pl
+import torch
+
 from torchmetrics import Accuracy, Dice
 from monai.optimizers import WarmupCosineSchedule
 from monai.losses import DiceLoss
-from monai.metrics import DiceMetric
+from monai.networks.utils import one_hot
+from monai.metrics import DiceMetric # type: ignore
+from monai.metrics.meandice import compute_dice
 
 class FinetuneUNETR(pl.LightningModule):
     def __init__(
@@ -25,15 +29,14 @@ class FinetuneUNETR(pl.LightningModule):
         self.num_classes = num_classes
 
         self.loss_fn = DiceLoss(
-            squared_pred=True, 
+            include_background=False,
+            to_onehot_y=True,
             softmax=True,
+            sigmoid=False,
         )
 
-        self.train_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
-        self.val_accuracy = Accuracy(task="multilabel", num_labels=self.num_classes)
-
-        self.train_dice_score = DiceMetric(include_background=True, num_classes=self.num_classes, reduction="mean_batch")
-        self.val_dice_score = DiceMetric(include_background=True, num_classes=self.num_classes, reduction="mean_batch")
+        self.validation_step_outputs = []
+        self.val_dice_score = DiceMetric(include_background=False, num_classes=self.num_classes, reduction="mean_batch")
 
         # Logging
         self.save_hyperparameters(ignore=["net", "learning_rate", "loss_fn"])
@@ -70,39 +73,63 @@ class FinetuneUNETR(pl.LightningModule):
     # Training
     def training_step(self, batch, batch_idx):
         loss, y_pred = self.common_step(batch, batch_idx) 
+
+        self.log("training/loss", loss, on_step=False, on_epoch=True, sync_dist=True)
         return {"loss": loss, "y_pred": y_pred}
     
-    def on_train_batch_end(self, outputs, batch, batch_idx):
-        self.train_accuracy(outputs["y_pred"], batch["label"]) # type: ignore
-        self.train_dice_score(outputs["y_pred"], batch["label"]) # type: ignore
-
-        self.log("training/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0]) # type: ignore
-        self.log("training/accuracy", self.train_accuracy, on_step=False, on_epoch=True, sync_dist=True)
-
-    def on_train_epoch_end(self):
-        dice = self.train_dice_score.aggregate()
-        for i in range(dice.shape[0]): # type: ignore
-            self.log(f"training/dice_score_{i}", dice[i], on_step=False, on_epoch=True, sync_dist=True) # type: ignore
-        self.train_dice_score.reset()
-
 
     # Validation
     def validation_step(self, batch, batch_idx):
         loss, y_pred = self.common_step(batch, batch_idx) 
-        return {"loss": loss, "y_pred": y_pred}
+        y_pred = torch.argmax(y_pred, dim=1, keepdim=True)
 
-    def on_validation_batch_end(self, outputs, batch, batch_idx):
-        self.val_accuracy(outputs["y_pred"], batch["label"])
-        self.val_dice_score(outputs["y_pred"], batch["label"])
-
-        self.log("validation/loss", outputs["loss"], on_step=False, on_epoch=True, sync_dist=True, batch_size=batch["image"].shape[0])
-        self.log("validation/accuracy", self.val_accuracy, on_step=False, on_epoch=True, sync_dist=True)
+        self.validation_step_outputs.append({"label": batch["label"], "y_pred": y_pred})
+        self.log("validation/loss", loss, on_step=False, on_epoch=True, sync_dist=True)
+        return {"loss": loss, "y_pred": y_pred, "label": batch['label']}
 
     def on_validation_epoch_end(self):
-        dice = self.val_dice_score.aggregate()
-        for i in range(dice.shape[0]): # type: ignore
-            self.log(f"validation/dice_score_{i}", dice[i], on_step=False, on_epoch=True, sync_dist=True) # type: ignore
-        self.val_dice_score.reset()
+        label = torch.cat([output["label"].cpu() for output in self.validation_step_outputs])
+        y_hat = torch.cat([output["y_pred"].cpu() for output in self.validation_step_outputs])
+
+        # ET = 3            axis = 1
+        # WT = 3 + 1 + 2    axis = 2
+        # TC = 3 + 1        axis = 3
+
+        dice_avg = 0
+
+        et_label = one_hot(torch.where(label == 3, 1, 0), num_classes=2)
+        et_y_hat = one_hot(torch.where(y_hat == 3, 1, 0), num_classes=2)
+        dice = compute_dice(et_label, et_y_hat, include_background=False)
+        dice = torch.nan_to_num(dice, nan=0)
+        dice = torch.mean(dice, dim=0)
+        self.log("validation/dice_et", dice, sync_dist=True)
+        dice_avg += dice
+        del et_label
+        del et_y_hat
+
+        wt_label = one_hot(torch.where((label == 3) | (label == 2) | (label == 1), 1, 0), num_classes=2)
+        wt_y_hat = one_hot(torch.where((y_hat == 3) | (y_hat == 2) | (y_hat == 1), 1, 0), num_classes=2)
+        dice = compute_dice(wt_label, wt_y_hat, include_background=False)
+        dice = torch.nan_to_num(dice, nan=0)
+        dice = torch.mean(dice, dim=0)
+        self.log("validation/dice_wt", dice, sync_dist=True)
+        dice_avg += dice
+        del wt_label
+        del wt_y_hat
+
+        tc_label = one_hot(torch.where((label == 2) | (label == 3), 1, 0), num_classes=2)
+        tc_y_hat = one_hot(torch.where((y_hat == 3) | (y_hat == 1), 1, 0), num_classes=2)
+        dice = compute_dice(tc_label, tc_y_hat, include_background=False)
+        dice = torch.nan_to_num(dice, nan=0)
+        dice = torch.mean(dice, dim=0)
+        self.log("validation/dice_tc", dice)
+        dice_avg += dice
+        del tc_label
+        del tc_y_hat
+
+        dice_avg /= 3
+        self.log("validation/dice", dice_avg, sync_dist=True)
+        self.validation_step_outputs.clear()
     
 
     # Testing

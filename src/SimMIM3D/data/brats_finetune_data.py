@@ -37,14 +37,13 @@ class BratsFinetuneData(pl.LightningDataModule):
         assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
 
         self.train_transform = Compose([
-            LoadImaged(keys=["image"]),
-            LoadImaged(keys=["label"], dtype=np.uint8),
-            EnsureChannelFirstd(keys="image"),
+            LoadImaged(keys=["image"], image_only=True),
+            LoadImaged(keys=["label"], image_only=True, dtype=np.uint8),
+            EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
-            ConvertToBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
+            RandSpatialCropd(keys=["image", "label"], roi_size=(128, 128, 128), random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
@@ -53,11 +52,10 @@ class BratsFinetuneData(pl.LightningDataModule):
         ])
 
         self.val_transform = Compose([
-            LoadImaged(keys=["image"]),
-            LoadImaged(keys=["label"], dtype=np.uint8),
-            EnsureChannelFirstd(keys="image"),
+            LoadImaged(keys=["image"], image_only=True),
+            LoadImaged(keys=["label"], image_only=True, dtype=np.uint8),
+            EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
-            ConvertToBratsClassesd(keys="label"),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
