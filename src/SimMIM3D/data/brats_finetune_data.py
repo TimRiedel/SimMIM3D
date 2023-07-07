@@ -1,6 +1,7 @@
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from torch.utils.data import random_split
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.transforms import (
@@ -17,8 +18,6 @@ from monai.transforms import (
     RandSpatialCropd,
 )
 
-from src.mlutils.transforms import ConvertToBratsClassesd
-
 class BratsFinetuneData(pl.LightningDataModule):
     def __init__(
             self,
@@ -26,12 +25,14 @@ class BratsFinetuneData(pl.LightningDataModule):
             batch_size: int,
             num_workers: int,
             img_size: int = 96,
+            train_frac: float = 1.0,
         ):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.input_size = (img_size,) * 3
+        self.train_frac = train_frac
 
         max_size = (192, 192, 128)
         assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
@@ -73,6 +74,14 @@ class BratsFinetuneData(pl.LightningDataModule):
                 num_workers=self.num_workers,
                 cache_rate=0.0,
             )
+
+            if 0.0 < self.train_frac and self.train_frac <= 1.0:
+                num_train = int(self.train_frac * len(self.train_ds))
+                self.train_ds, _ = random_split(self.train_ds, [num_train, len(self.train_ds) - num_train])
+            else:
+                raise ValueError(f"Invalid value for `train_frac`: {self.train_frac}. `train_frac` must be in the range (0.0, 1.0].")
+
+            
         
             self.val_ds = DecathlonDataset(
                 root_dir=self.data_dir,
@@ -82,6 +91,9 @@ class BratsFinetuneData(pl.LightningDataModule):
                 num_workers=self.num_workers,
                 cache_rate=0.0,
             )
+
+            print(f"Length of training dataset: {len(self.train_ds)}")
+            print(f"Length of validation dataset: {len(self.val_ds)}")
 
         if stage == 'test' or stage is None:
             self.test_ds = DecathlonDataset(

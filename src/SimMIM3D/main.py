@@ -75,7 +75,8 @@ def parse_options():
     parser.add_argument('--quick', action='store_true', help="quick run for debugging purposes")
     parser.add_argument('--dataset', type=str, choices=['brats', 'adni'], default='adni', help="dataset to use (brats or adni)")
     parser.add_argument('--lr', type=float, default=1e-4, help="learning rate for training")
-    parser.add_argument('--mask_ratio', type=float, default=0.7, help="ratio of masked patches")
+    parser.add_argument('--mask_ratio', type=float, default=0.7, help="ratio of masked patches for pre-training")
+    parser.add_argument('--train_frac', type=float, default=1.0, help="fraction of training data for finetuning")
     parser.add_argument('--name_suffix', type=str, default="", help="suffix for run name")
 
     args = parser.parse_args()

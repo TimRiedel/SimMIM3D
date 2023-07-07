@@ -8,6 +8,7 @@ DATA:
     NUM_CLASSES: 4 # including background
     BATCH_SIZE: 4 # TODO: change to 8 and avoid CUDA Out of Memory
     NUM_WORKERS: 18
+    TRAIN_FRAC: 1.0
 TRAINING:
     BASE_LR: 1e-3
     WEIGHT_DECAY: 0.0

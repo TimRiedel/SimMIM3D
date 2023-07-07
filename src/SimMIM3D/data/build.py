@@ -30,7 +30,8 @@ def build_data(config, dataset, is_pretrain=True):
                 data_dir=config.DATA.DATA_DIR,
                 img_size=config.DATA.IMG_SIZE,
                 batch_size=config.DATA.BATCH_SIZE,
-                num_workers=config.DATA.NUM_WORKERS
+                num_workers=config.DATA.NUM_WORKERS,
+                train_frac=config.DATA.TRAIN_FRAC,
             )
         else:
             raise ValueError(f"Unknown dataset {dataset}.")

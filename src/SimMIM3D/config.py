@@ -41,8 +41,10 @@ _C.DATA.NUM_CLASSES = 4
 _C.DATA.BATCH_SIZE = 8
 # Number of data loading threads
 _C.DATA.NUM_WORKERS = 16
-# [SimMIM] Mask patch size for MaskGenerator
+# [Pretraining] Mask patch size for MaskGenerator
 _C.DATA.MASK_RATIO = 0.7
+# [Finetuning] Percentage of original training set to use 
+_C.DATA.TRAIN_FRAC = 1.0
 
 
 _C.TRAINING = CN()
@@ -82,6 +84,8 @@ def get_config(args = None):
         _C.TRAINING.BASE_LR = args.lr
     if args.mask_ratio:
         _C.DATA.MASK_RATIO = args.mask_ratio
+    if args.train_frac:
+        _C.DATA.TRAIN_FRAC = args.train_frac
 
     if args.name_suffix:
         _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{args.name_suffix}"

@@ -45,7 +45,6 @@ def build_unetr(cfg):
 
         # remove all items that start with patch_embedding
         encoder_weights = {k: v for k, v in encoder_weights.items() if not k.startswith('patch_embedding')}
-        print(encoder_weights.keys())
     else:
         encoder_weights = None
 
