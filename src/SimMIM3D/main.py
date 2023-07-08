@@ -36,7 +36,7 @@ def main(
             name=config.LOGGING.RUN_NAME,
             save_dir=wandb_log_dir,
             config=wandb_config,
-            log_model="all",
+            log_model="True",
         )
 
     callbacks: list[pl.Callback] = [
