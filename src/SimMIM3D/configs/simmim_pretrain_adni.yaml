@@ -1,5 +1,5 @@
 LOGGING:
-    VERSION: "v2"
+    VERSION: "v5"
     RUN_NAME: SimMIM3D_PT_ADNI
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
@@ -9,10 +9,10 @@ DATA:
     NUM_WORKERS: 18
     MASK_RATIO: 0.7
 TRAINING:
-    BASE_LR: 1e-4
-    WEIGHT_DECAY: 0.0
-    WARMUP_EPOCHS: 0
-    EPOCHS: 400
+    BASE_LR: 3e-4
+    WEIGHT_DECAY: 0.005
+    WARMUP_EPOCHS: 50
+    EPOCHS: 450
 MODEL:
     IN_CHANNELS: 1
     PATCH_SIZE: 16
