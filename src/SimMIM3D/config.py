@@ -56,8 +56,6 @@ _C.TRAINING.WEIGHT_DECAY = 0.01
 _C.TRAINING.WARMUP_EPOCHS = 100
 # Number of epochs to train for
 _C.TRAINING.EPOCHS = 900
-# Number of cross validations / folds to run
-_C.TRAINING.CROSS_VALIDATIONS = 1
 
 
 _C.MODEL = CN()
