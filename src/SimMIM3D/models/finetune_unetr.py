@@ -1,7 +1,6 @@
 import pytorch_lightning as pl
 import torch
 
-from torchmetrics import Accuracy, Dice
 from monai.optimizers import WarmupCosineSchedule
 from monai.losses import DiceLoss
 from monai.networks.utils import one_hot
@@ -13,7 +12,6 @@ class FinetuneUNETR(pl.LightningModule):
             self,
             net,
             learning_rate: float, 
-            optimizer_class,
             weight_decay: float,
             warmup_epochs: int,
             epochs: int,
@@ -22,7 +20,6 @@ class FinetuneUNETR(pl.LightningModule):
         super().__init__()
         self.net = net
         self.learning_rate = learning_rate
-        self.optimizer_class = optimizer_class
         self.weight_decay = weight_decay
         self.warmup_epochs = warmup_epochs
         self.epochs = epochs
@@ -45,7 +42,7 @@ class FinetuneUNETR(pl.LightningModule):
     def configure_optimizers(self):
         # TODO: Consider layer-wise learning rate decay (layer decay ratio = 0.75) to
         # stabilize the ViT training as suggested in "Self-Pretraining with MAE"
-        optimizer = self.optimizer_class(
+        optimizer = torch.optim.AdamW(
             self.parameters(), 
             lr=self.learning_rate, 
             weight_decay=self.weight_decay

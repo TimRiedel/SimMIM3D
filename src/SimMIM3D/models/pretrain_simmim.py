@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import wandb
+import torch
 import torch.nn.functional as F
 from monai.optimizers import WarmupCosineSchedule
 
@@ -8,7 +9,6 @@ class PretrainSimMIM(pl.LightningModule):
             self,
             net,
             learning_rate: float, 
-            optimizer_class,
             weight_decay: float,
             warmup_epochs: int,
             epochs: int
@@ -16,7 +16,6 @@ class PretrainSimMIM(pl.LightningModule):
         super().__init__()
         self.net = net
         self.learning_rate = learning_rate
-        self.optimizer_class = optimizer_class
         self.weight_decay = weight_decay
         self.warmup_epochs = warmup_epochs
         self.epochs = epochs
@@ -27,7 +26,7 @@ class PretrainSimMIM(pl.LightningModule):
         self.channel_idx = 0
 
     def configure_optimizers(self):
-        optimizer = self.optimizer_class(
+        optimizer = torch.optim.AdamW(
             self.parameters(), 
             lr=self.learning_rate, 
             weight_decay=self.weight_decay

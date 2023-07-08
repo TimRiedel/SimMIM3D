@@ -8,7 +8,6 @@ def build_model(config, net, is_pretrain=True):
         return PretrainSimMIM(
             net = net,
             learning_rate=config.TRAINING.BASE_LR,
-            optimizer_class=torch.optim.AdamW,
             weight_decay=config.TRAINING.WEIGHT_DECAY,
             warmup_epochs=config.TRAINING.WARMUP_EPOCHS,
             epochs=config.TRAINING.EPOCHS,
@@ -17,7 +16,6 @@ def build_model(config, net, is_pretrain=True):
         return FinetuneUNETR(
             net = net,
             learning_rate=config.TRAINING.BASE_LR,
-            optimizer_class=torch.optim.AdamW,
             weight_decay=config.TRAINING.WEIGHT_DECAY,
             warmup_epochs=config.TRAINING.WARMUP_EPOCHS,
             epochs=config.TRAINING.EPOCHS,
