@@ -12,6 +12,7 @@ from monai.transforms import (
     RandShiftIntensityd,
     RandSpatialCropd,
     Resized,
+    Rotate90d,
     ToTensord,
 )
 
@@ -40,6 +41,7 @@ class AdniPretrainData(pl.LightningDataModule):
             LoadImaged(keys=["image"], image_only=True),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image"]),
+            Rotate90d(keys=["image"], k=2, spatial_axes=(0,2)),
             NormalizeIntensityd(keys="image", channel_wise=True),
             RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=(128, 128, 128)),
@@ -56,6 +58,7 @@ class AdniPretrainData(pl.LightningDataModule):
             LoadImaged(keys=["image"], image_only=True),
             EnsureChannelFirstd(keys="image"),
             EnsureTyped(keys=["image"]),
+            Rotate90d(keys=["image"], k=2, spatial_axes=(0,2)),
             NormalizeIntensityd(keys="image", channel_wise=True),
             RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=[128, 128, 128]),
