@@ -1,11 +1,11 @@
 LOGGING:
-    VERSION: "v2.2.7"
-    RUN_NAME: SimMIM3D_PT_Brats
+    PROJECT_NAME: brats-pretrain
+    RUN_NAME: PT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
     IMG_SIZE: 128
-    BATCH_SIZE: 8
+    BATCH_SIZE: 16
     NUM_WORKERS: 18
     MASK_RATIO: 0.7
 TRAINING:

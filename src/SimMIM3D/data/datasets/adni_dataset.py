@@ -1,11 +1,11 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from monai.data import Dataset
+from monai.data import CacheDataset
 
 valid_dxs = ['CN', 'MCI', 'EMCI', 'LMCI', 'AD', 'SMC']
 
-class AdniDataset(Dataset):
+class AdniDataset(CacheDataset):
     def __init__(
         self,
         root_dir = None,
@@ -17,6 +17,8 @@ class AdniDataset(Dataset):
         train_frac = 0.6,
         val_frac = 0.2,
         is_pretrain = True,
+        cache_rate = 1.0,
+        num_workers = 1
     ):
         self.data_dir = Path(f"{root_dir}/adni_128_int")
         self.data_info_path = Path(f"{root_dir}/dataset.csv")
@@ -52,7 +54,9 @@ class AdniDataset(Dataset):
         self.idx_to_class = {i: j for i, j in enumerate(self.pt_classes)}
         self.class_to_idx = {value: key for key, value in self.idx_to_class.items()}
 
-        self.transform = transform
+        super().__init__(self.get_data(), transform, cache_rate=cache_rate, num_workers=num_workers)
+        print(self.set_rate)
+
         if self.transform is not None:
             self.transform.set_random_state(seed)
 
@@ -89,19 +93,15 @@ class AdniDataset(Dataset):
         self.ft_val_test_patients = np.concatenate((self.ft_val_patients, self.ft_test_patients))
 
 
-    def __len__(self):
-        return len(self.df)
+    def get_data(self):
+        data = []
+        for index in range(len(self.df)):
+            img_uid = self.df.iloc[index]['IMAGEUID']
+            diagnosis = self.df.iloc[index]['DX']
+            image_path = list(self.data_dir.glob(f'file_{img_uid}.npy*'))[0]
 
+            label = self.class_to_idx[diagnosis]
 
-    def __getitem__(self, index: int):
-        img_uid = self.df.iloc[index]['IMAGEUID']
-        diagnosis = self.df.iloc[index]['DX']
-
-        image_path = list(self.data_dir.glob(f'file_{img_uid}.npy*'))[0]
-
-        label = self.class_to_idx[diagnosis]
-
-        data = {"image": image_path, "label": label, "diagnosis": diagnosis}
-        if self.transform is not None:
-            return self.transform(data)
+            item = {"image": image_path, "label": label, "diagnosis": diagnosis}
+            data.append(item)
         return data

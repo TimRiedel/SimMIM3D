@@ -24,7 +24,7 @@ def main(
     model = build_model(config, network, is_pretrain=is_pretrain)
 
     wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
-    ckpt_dir = f"{config.LOGGING.JOBS_DIR}/checkpoints/{config.LOGGING.RUN_NAME}"
+    ckpt_dir = f"{config.LOGGING.CKPT_DIR}/{config.LOGGING.RUN_NAME}"
 
     wandb_config = convert_cfg_to_dict(config)
     wandb_config.pop("LOGGING")
@@ -32,7 +32,7 @@ def main(
     logger = None
     if not dev_run:
         logger = WandbLogger(
-            project="ba-thesis",
+            project=config.LOGGING.PROJECT_NAME,
             name=config.LOGGING.RUN_NAME,
             save_dir=wandb_log_dir,
             config=wandb_config,
@@ -63,6 +63,7 @@ def main(
         callbacks=callbacks,
         logger=logger,
         profiler="simple",
+        log_every_n_steps=20,
     )
 
     trainer.fit(model, data)

@@ -72,7 +72,7 @@ class BratsPretrainData(pl.LightningDataModule):
                 transform=self.train_transform,
                 section="training",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
         
             self.val_ds = DecathlonDataset(
@@ -81,7 +81,7 @@ class BratsPretrainData(pl.LightningDataModule):
                 transform=self.val_transform,
                 section="validation",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
 
         if stage == 'test' or stage is None:
@@ -91,7 +91,7 @@ class BratsPretrainData(pl.LightningDataModule):
                 transform=self.val_transform,
                 section="test",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
         
 

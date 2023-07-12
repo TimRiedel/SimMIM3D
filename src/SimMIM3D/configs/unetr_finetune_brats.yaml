@@ -1,6 +1,6 @@
 LOGGING:
-    VERSION: v3
-    RUN_NAME: UNETR_FT_Brats
+    PROJECT_NAME: brats-finetune
+    RUN_NAME: FT_Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
     CKPT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints
 DATA:

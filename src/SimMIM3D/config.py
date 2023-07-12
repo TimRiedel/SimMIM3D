@@ -22,8 +22,8 @@ _C.SYSTEM.PRECISION = "32-true"
 
 
 _C.LOGGING = CN()
-# Version of the model
-_C.LOGGING.VERSION = "v1"
+# Name of the wandb project
+_C.LOGGING.PROJECT_NAME = "ba-thesis"
 # Name of the run
 _C.LOGGING.RUN_NAME = "Run"
 # Directory for jobs (checkpoints, logs, etc.)
@@ -95,8 +95,6 @@ def get_config(args = None):
 
     if args.name_suffix:
         _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{args.name_suffix}"
-    else:
-        _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{_C.LOGGING.VERSION}"
 
     return _C.clone()
 

@@ -78,6 +78,8 @@ class AdniPretrainData(pl.LightningDataModule):
                 transform=self.train_transform,
                 section="training",
                 seed=self.seed,
+                cache_rate=0.5,
+                num_workers=self.num_workers,
             )
         
             self.val_ds = AdniDataset(
@@ -85,6 +87,8 @@ class AdniPretrainData(pl.LightningDataModule):
                 transform=self.val_transform,
                 section="validation",
                 seed=self.seed,
+                cache_rate=0.5,
+                num_workers=self.num_workers,
             )
 
         if stage == 'test' or stage is None:
@@ -93,6 +97,8 @@ class AdniPretrainData(pl.LightningDataModule):
                 transform=self.test_transform,
                 section="test",
                 seed=self.seed,
+                cache_rate=0.5,
+                num_workers=self.num_workers,
             )
         
 

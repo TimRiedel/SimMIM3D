@@ -72,7 +72,7 @@ class BratsFinetuneData(pl.LightningDataModule):
                 transform=self.train_transform,
                 section="training",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
 
             if 0.0 < self.train_frac and self.train_frac <= 1.0:
@@ -89,7 +89,7 @@ class BratsFinetuneData(pl.LightningDataModule):
                 transform=self.val_transform,
                 section="validation",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
 
             print(f"Length of training dataset: {len(self.train_ds)}")
@@ -102,7 +102,7 @@ class BratsFinetuneData(pl.LightningDataModule):
                 transform=self.val_transform,
                 section="test",
                 num_workers=self.num_workers,
-                cache_rate=0.0,
+                cache_rate=1.0,
             )
         
 

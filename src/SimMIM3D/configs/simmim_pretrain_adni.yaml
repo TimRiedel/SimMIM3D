@@ -1,6 +1,6 @@
 LOGGING:
-    VERSION: "v5"
-    RUN_NAME: SimMIM3D_PT_ADNI
+    PROJECT_NAME: "adni-pretrain"
+    RUN_NAME: PT_ADNI
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/ADNI
