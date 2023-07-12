@@ -28,6 +28,8 @@ _C.LOGGING.VERSION = "v1"
 _C.LOGGING.RUN_NAME = "Run"
 # Directory for jobs (checkpoints, logs, etc.)
 _C.LOGGING.JOBS_DIR = f"{HOME_DIR}/jobs"
+# Directory to load checkpoint from
+_C.LOGGING.CKPT_DIR = f"{HOME_DIR}/jobs/checkpoints"
 
 
 _C.DATA = CN()
@@ -67,7 +69,7 @@ _C.MODEL.IN_CHANNELS = 4
 _C.MODEL.PATCH_SIZE = 16
 # Dropout rate for the encoder
 _C.MODEL.ENCODER_DROPOUT = 0.0
-# Path to checkpoint for finetuning
+# Path to checkpoint relative to checkpoint directory for finetuning, if empty no checkpoint is loaded
 _C.MODEL.ENCODER_CKPT_PATH = "" 
 
 
@@ -86,6 +88,10 @@ def get_config(args = None):
         _C.DATA.MASK_RATIO = args.mask_ratio
     if args.train_frac:
         _C.DATA.TRAIN_FRAC = args.train_frac
+    if args.load_checkpoint:
+        _C.MODEL.ENCODER_CKPT_PATH = f"{_C.LOGGING.CKPT_DIR}/{args.load_checkpoint}"
+    else:
+        _C.TRAINING.FREEZE_WARMUP_EPOCHS = 0
 
     if args.name_suffix:
         _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{args.name_suffix}"

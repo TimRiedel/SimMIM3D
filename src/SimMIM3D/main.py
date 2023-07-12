@@ -78,6 +78,7 @@ def parse_options():
     parser.add_argument('--mask_ratio', type=float, help="ratio of masked patches for pre-training")
     parser.add_argument('--train_frac', type=float, help="fraction of training data for finetuning")
     parser.add_argument('--name_suffix', type=str, default="", help="suffix for run name")
+    parser.add_argument('--load_checkpoint', type=str, help="path to checkpoint relative to checkpoint folder to use for finetuning")
 
     args = parser.parse_args()
 
@@ -100,7 +101,7 @@ if __name__ == "__main__":
 
     main(
         config=config, 
-        is_pretrain=is_pretrain, 
         dataset=args.dataset, 
+        is_pretrain=is_pretrain, 
         dev_run=args.quick
     )
