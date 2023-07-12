@@ -13,7 +13,8 @@ class FinetuneUNETR(pl.LightningModule):
             net,
             learning_rate: float, 
             weight_decay: float,
-            warmup_epochs: int,
+            freeze_warmup_epochs: int,
+            lr_warmup_epochs: int,
             epochs: int,
             num_classes: int,
         ):
@@ -21,9 +22,11 @@ class FinetuneUNETR(pl.LightningModule):
         self.net = net
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.warmup_epochs = warmup_epochs
+        self.lr_warmup_epochs = lr_warmup_epochs
+        self.freeze_warmup_epochs = freeze_warmup_epochs
         self.epochs = epochs
         self.num_classes = num_classes
+        self.are_weights_frozen = False
 
         self.loss_fn = DiceLoss(
             include_background=False,
@@ -31,6 +34,12 @@ class FinetuneUNETR(pl.LightningModule):
             softmax=True,
             sigmoid=False,
         )
+        
+        if self.freeze_warmup_epochs > 0:
+            print("Freezing weights...")
+            for param in self.net.vit.parameters():
+                param.requires_grad = False
+            self.are_weights_frozen = True
 
         self.validation_step_outputs = []
         self.val_dice_score = DiceMetric(include_background=False, num_classes=self.num_classes, reduction="mean_batch")
@@ -40,8 +49,6 @@ class FinetuneUNETR(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        # TODO: Consider layer-wise learning rate decay (layer decay ratio = 0.75) to
-        # stabilize the ViT training as suggested in "Self-Pretraining with MAE"
         optimizer = torch.optim.AdamW(
             self.parameters(), 
             lr=self.learning_rate, 
@@ -50,8 +57,8 @@ class FinetuneUNETR(pl.LightningModule):
 
         lr_scheduler = WarmupCosineSchedule(
             optimizer=optimizer,
-            warmup_steps=self.warmup_epochs,
-            t_total=self.epochs + self.warmup_epochs
+            warmup_steps=self.lr_warmup_epochs,
+            t_total=self.epochs + self.lr_warmup_epochs
         )
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": lr_scheduler, "interval": "epoch"}}
 
@@ -66,6 +73,13 @@ class FinetuneUNETR(pl.LightningModule):
 
 
     # Training
+    def on_train_epoch_start(self):
+        if self.are_weights_frozen and self.current_epoch >= self.freeze_warmup_epochs - 1:
+            print("Unfreezing weights...")
+            for param in self.net.parameters():
+                param.requires_grad = True
+            self.are_weights_frozen = False
+    
     def training_step(self, batch, batch_idx):
         loss, y_pred = self.common_step(batch, batch_idx) 
 

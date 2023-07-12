@@ -9,7 +9,7 @@ def build_model(config, net, is_pretrain=True):
             net = net,
             learning_rate=config.TRAINING.BASE_LR,
             weight_decay=config.TRAINING.WEIGHT_DECAY,
-            warmup_epochs=config.TRAINING.WARMUP_EPOCHS,
+            lr_warmup_epochs=config.TRAINING.LR_WARMUP_EPOCHS,
             epochs=config.TRAINING.EPOCHS,
         )
     else:
@@ -17,7 +17,8 @@ def build_model(config, net, is_pretrain=True):
             net = net,
             learning_rate=config.TRAINING.BASE_LR,
             weight_decay=config.TRAINING.WEIGHT_DECAY,
-            warmup_epochs=config.TRAINING.WARMUP_EPOCHS,
+            lr_warmup_epochs=config.TRAINING.LR_WARMUP_EPOCHS,
+            freeze_warmup_epochs=config.TRAINING.FREEZE_WARMUP_EPOCHS,
             epochs=config.TRAINING.EPOCHS,
             num_classes=config.DATA.NUM_CLASSES,
         )

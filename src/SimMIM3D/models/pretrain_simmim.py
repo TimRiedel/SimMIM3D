@@ -10,14 +10,14 @@ class PretrainSimMIM(pl.LightningModule):
             net,
             learning_rate: float, 
             weight_decay: float,
-            warmup_epochs: int,
+            lr_warmup_epochs: int,
             epochs: int
         ):
         super().__init__()
         self.net = net
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.warmup_epochs = warmup_epochs
+        self.lr_warmup_epochs = lr_warmup_epochs
         self.epochs = epochs
 
         # Logging
@@ -34,8 +34,8 @@ class PretrainSimMIM(pl.LightningModule):
 
         lr_scheduler = WarmupCosineSchedule(
             optimizer=optimizer,
-            warmup_steps=self.warmup_epochs,
-            t_total=self.epochs + self.warmup_epochs
+            warmup_steps=self.lr_warmup_epochs,
+            t_total=self.epochs + self.lr_warmup_epochs
         )
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": lr_scheduler, "interval": "epoch"}}
 

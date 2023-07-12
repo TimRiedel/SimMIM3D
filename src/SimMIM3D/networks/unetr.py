@@ -1,8 +1,6 @@
 from monai.networks.nets import UNETR
 import torch
 
-from src.SimMIM3D.networks.masked_vit import MaskedViT3D
-
 class UNETR3D(UNETR):
     def __init__(
         self,

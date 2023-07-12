@@ -56,7 +56,7 @@ def main(
         precision=config.SYSTEM.PRECISION, 
 
         # Training
-        max_epochs=config.TRAINING.EPOCHS + config.TRAINING.WARMUP_EPOCHS,
+        max_epochs=config.TRAINING.EPOCHS + config.TRAINING.LR_WARMUP_EPOCHS,
         fast_dev_run=dev_run,
 
         # Logging
