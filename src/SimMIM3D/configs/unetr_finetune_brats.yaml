@@ -1,6 +1,6 @@
 LOGGING:
     PROJECT_NAME: brats-finetune
-    RUN_NAME: FT_Brats
+    RUN_NAME: Brats
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
     CKPT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints
 DATA:

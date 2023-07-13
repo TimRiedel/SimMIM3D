@@ -1,6 +1,6 @@
 LOGGING:
     PROJECT_NAME: "adni-pretrain"
-    RUN_NAME: PT_ADNI
+    RUN_NAME: ADNI
     JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs
 DATA:
     DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/ADNI
