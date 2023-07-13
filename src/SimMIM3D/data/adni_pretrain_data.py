@@ -42,14 +42,17 @@ class AdniPretrainData(pl.LightningDataModule):
             EnsureChannelFirstd(keys=["image"]),
             EnsureTyped(keys=["image"]),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
+            # Resizing
             RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=self.input_size),
+            # Augmentation
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
             RandAdjustContrastd(keys=["image"], gamma=(0.5, 1.5), prob=0.5),
             RandScaleIntensityd(keys=["image"], factors=0.2, prob=1.0),
             RandShiftIntensityd(keys=["image"], offsets=0.2, prob=1.0),
+            # Mask
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])

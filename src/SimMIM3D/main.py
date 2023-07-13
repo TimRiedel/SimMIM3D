@@ -63,7 +63,7 @@ def main(
         callbacks=callbacks,
         logger=logger,
         profiler="simple",
-        log_every_n_steps=20,
+        log_every_n_steps=config.DATA.BATCH_SIZE,
     )
 
     trainer.fit(model, data)

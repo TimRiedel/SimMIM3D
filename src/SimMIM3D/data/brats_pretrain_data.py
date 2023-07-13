@@ -3,18 +3,19 @@ import torch
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.transforms import (
+    BorderPadd,
+    CenterSpatialCropd,
     Compose, 
     EnsureChannelFirstd, 
     EnsureTyped, 
     LoadImaged, 
     NormalizeIntensityd,
     Orientationd,
-    SpatialCropd, 
     RandAdjustContrastd,
     RandFlipd,
     RandScaleIntensityd,
     RandShiftIntensityd, 
-    RandSpatialCropd,
+    Resized,
     ToTensord,
 )
 
@@ -26,8 +27,8 @@ class BratsPretrainData(pl.LightningDataModule):
             data_dir: str,
             batch_size: int,
             num_workers: int,
-            img_size: int = 96,
-            patch_size: int = 1,
+            img_size: int = 128,
+            patch_size: int = 16,
             mask_ratio: float = 0.0
         ):
         super().__init__()
@@ -36,8 +37,8 @@ class BratsPretrainData(pl.LightningDataModule):
         self.num_workers = num_workers
         self.input_size = (img_size,) * 3
 
-        max_size = (192, 192, 128)
-        assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
+        max_size = (192, 192, 154)
+        assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 154)`"
 
         self.train_transform = Compose([
             LoadImaged(keys=["image"], image_only=True),
@@ -45,14 +46,18 @@ class BratsPretrainData(pl.LightningDataModule):
             EnsureTyped(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
-            SpatialCropd(keys=["image"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image"], roi_size=self.input_size, random_size=False),
+            # Resizing
+            CenterSpatialCropd(keys=["image"], roi_size=max_size),
+            BorderPadd(keys=["image"], spatial_border=(0, 0, 19), mode="constant", constant_values=0),
+            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
+            # Augmentation
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
             RandAdjustContrastd(keys=["image"], gamma=(0.5, 1.5), prob=0.5),
             RandScaleIntensityd(keys=["image"], factors=0.2, prob=1.0),
             RandShiftIntensityd(keys=["image"], offsets=0.2, prob=1.0),
+            # Mask
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])
@@ -63,8 +68,11 @@ class BratsPretrainData(pl.LightningDataModule):
             EnsureTyped(keys=["image"]),
             Orientationd(keys=["image"], axcodes="RAS"),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
-            SpatialCropd(keys=["image"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image"], roi_size=self.input_size, random_size=False),
+            # Resizing
+            CenterSpatialCropd(keys=["image"], roi_size=max_size),
+            BorderPadd(keys=["image"], spatial_border=(0, 0, 19), mode="constant", constant_values=0),
+            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
+            # Mask
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])

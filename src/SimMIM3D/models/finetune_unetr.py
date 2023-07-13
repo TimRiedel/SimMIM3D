@@ -131,7 +131,7 @@ class FinetuneUNETR(pl.LightningModule):
         dice = compute_dice(tc_label, tc_y_hat, include_background=False)
         dice = torch.nan_to_num(dice, nan=0)
         dice = torch.mean(dice, dim=0)
-        self.log("validation/dice_tc", dice)
+        self.log("validation/dice_tc", dice, sync_dist=True)
         dice_avg += dice
         del tc_label
         del tc_y_hat
