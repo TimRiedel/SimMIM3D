@@ -55,7 +55,6 @@ class AdniDataset(CacheDataset):
         self.class_to_idx = {value: key for key, value in self.idx_to_class.items()}
 
         super().__init__(self.get_data(), transform, cache_rate=cache_rate, num_workers=num_workers)
-        print(self.set_rate)
 
         if self.transform is not None:
             self.transform.set_random_state(seed)

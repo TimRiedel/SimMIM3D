@@ -9,10 +9,10 @@ from monai.transforms import (
     NormalizeIntensityd,
     RandAdjustContrastd,
     RandFlipd,
+    RandScaleIntensityd,
     RandShiftIntensityd,
     RandSpatialCropd,
     Resized,
-    Rotate90d,
     ToTensord,
 )
 
@@ -39,35 +39,30 @@ class AdniPretrainData(pl.LightningDataModule):
 
         self.train_transform = Compose([
             LoadImaged(keys=["image"], image_only=True),
-            EnsureChannelFirstd(keys="image"),
+            EnsureChannelFirstd(keys=["image"]),
             EnsureTyped(keys=["image"]),
-            Rotate90d(keys=["image"], k=2, spatial_axes=(0,2)),
-            NormalizeIntensityd(keys="image", channel_wise=True),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
             RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
-            Resized(keys=["image"], spatial_size=(128, 128, 128)),
+            Resized(keys=["image"], spatial_size=self.input_size),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
-            RandAdjustContrastd(keys=["image"], prob=0.7, gamma=(0.5, 2.5)),
-            RandShiftIntensityd(keys=["image"], offsets=0.125, prob=0.7),
+            RandAdjustContrastd(keys=["image"], gamma=(0.5, 1.5), prob=0.5),
+            RandScaleIntensityd(keys=["image"], factors=0.2, prob=1.0),
+            RandShiftIntensityd(keys=["image"], offsets=0.2, prob=1.0),
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
         ])
 
         self.val_transform = Compose([
             LoadImaged(keys=["image"], image_only=True),
-            EnsureChannelFirstd(keys="image"),
+            EnsureChannelFirstd(keys=["image"]),
             EnsureTyped(keys=["image"]),
-            Rotate90d(keys=["image"], k=2, spatial_axes=(0,2)),
-            NormalizeIntensityd(keys="image", channel_wise=True),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
             RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
-            Resized(keys=["image"], spatial_size=[128, 128, 128]),
+            Resized(keys=["image"], spatial_size=self.input_size),
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
-        ])
-
-        self.test_transform = Compose([
-            ToTensord(keys=["image"], dtype=torch.float)
         ])
 
 
@@ -94,7 +89,7 @@ class AdniPretrainData(pl.LightningDataModule):
         if stage == 'test' or stage is None:
             self.test_ds = AdniDataset(
                 root_dir=self.data_dir, 
-                transform=self.test_transform,
+                transform=self.val_transform,
                 section="test",
                 seed=self.seed,
                 cache_rate=0.5,

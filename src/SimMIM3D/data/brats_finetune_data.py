@@ -6,16 +6,18 @@ from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.transforms import (
     Compose, 
-    ConvertToMultiChannelBasedOnBratsClassesd,
     EnsureChannelFirstd, 
     EnsureTyped, 
     LoadImaged, 
     NormalizeIntensityd,
     Orientationd,
     SpatialCropd, 
+    RandAdjustContrastd,
     RandFlipd,
     RandScaleIntensityd,
+    RandShiftIntensityd,
     RandSpatialCropd,
+    ToTensord,
 )
 
 class BratsFinetuneData(pl.LightningDataModule):
@@ -43,13 +45,16 @@ class BratsFinetuneData(pl.LightningDataModule):
             EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
             RandSpatialCropd(keys=["image", "label"], roi_size=(128, 128, 128), random_size=False),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=1),
             RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
-            NormalizeIntensityd(keys="image", channel_wise=True),
-            RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
+            RandAdjustContrastd(keys=["image"], gamma=(0.5, 1.5), prob=0.5),
+            RandScaleIntensityd(keys=["image"], factors=0.2, prob=1.0),
+            RandShiftIntensityd(keys=["image"], offsets=0.2, prob=1.0),
+            ToTensord(keys=["image"], dtype=torch.float)
         ])
 
         self.val_transform = Compose([
@@ -58,9 +63,10 @@ class BratsFinetuneData(pl.LightningDataModule):
             EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
             SpatialCropd(keys=["image", "label"], roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys=["image", "label"], roi_size=self.input_size, random_size=False),
-            NormalizeIntensityd(keys="image", channel_wise=True),
+            RandSpatialCropd(keys=["image", "label"], roi_size=(128, 128, 128), random_size=False),
+            ToTensord(keys=["image"], dtype=torch.float)
         ])
 
 

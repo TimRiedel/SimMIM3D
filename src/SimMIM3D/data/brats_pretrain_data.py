@@ -10,10 +10,12 @@ from monai.transforms import (
     NormalizeIntensityd,
     Orientationd,
     SpatialCropd, 
+    RandAdjustContrastd,
     RandFlipd,
     RandScaleIntensityd,
     RandShiftIntensityd, 
     RandSpatialCropd,
+    ToTensord,
 )
 
 from seg3d.src.mlutils.transforms import MaskGenerator3D
@@ -38,29 +40,33 @@ class BratsPretrainData(pl.LightningDataModule):
         assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
 
         self.train_transform = Compose([
-            LoadImaged(keys=["image"]),
-            EnsureChannelFirstd(keys="image"),
-            EnsureTyped(keys="image"),
-            Orientationd(keys="image", axcodes="RAS"),
-            SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
-            RandFlipd(keys="image", prob=0.5, spatial_axis=0),
-            RandFlipd(keys="image", prob=0.5, spatial_axis=1),
-            RandFlipd(keys="image", prob=0.5, spatial_axis=2),
-            NormalizeIntensityd(keys="image", channel_wise=True),
-            RandScaleIntensityd(keys="image", factors=0.1, prob=1.0),
+            LoadImaged(keys=["image"], image_only=True),
+            EnsureChannelFirstd(keys=["image"]),
+            EnsureTyped(keys=["image"]),
+            Orientationd(keys=["image"], axcodes="RAS"),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
+            SpatialCropd(keys=["image"], roi_size=max_size, roi_center=(120, 120, 81)),
+            RandSpatialCropd(keys=["image"], roi_size=self.input_size, random_size=False),
+            RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
+            RandFlipd(keys=["image"], prob=0.5, spatial_axis=1),
+            RandFlipd(keys=["image"], prob=0.5, spatial_axis=2),
+            RandAdjustContrastd(keys=["image"], gamma=(0.5, 1.5), prob=0.5),
+            RandScaleIntensityd(keys=["image"], factors=0.2, prob=1.0),
+            RandShiftIntensityd(keys=["image"], offsets=0.2, prob=1.0),
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
+            ToTensord(keys=["image"], dtype=torch.float),
         ])
 
         self.val_transform = Compose([
-            LoadImaged(keys=["image"]),
-            EnsureChannelFirstd(keys="image"),
-            EnsureTyped(keys="image"),
-            Orientationd(keys="image", axcodes="RAS"),
-            SpatialCropd(keys="image", roi_size=max_size, roi_center=(120, 120, 81)),
-            RandSpatialCropd(keys="image", roi_size=self.input_size, random_size=False),
-            NormalizeIntensityd(keys="image", channel_wise=True),
+            LoadImaged(keys=["image"], image_only=True),
+            EnsureChannelFirstd(keys=["image"]),
+            EnsureTyped(keys=["image"]),
+            Orientationd(keys=["image"], axcodes="RAS"),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
+            SpatialCropd(keys=["image"], roi_size=max_size, roi_center=(120, 120, 81)),
+            RandSpatialCropd(keys=["image"], roi_size=self.input_size, random_size=False),
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
+            ToTensord(keys=["image"], dtype=torch.float),
         ])
 
 
