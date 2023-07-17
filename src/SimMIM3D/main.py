@@ -3,7 +3,7 @@ import warnings
 import pytorch_lightning as pl
 import argparse
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 
 from src.SimMIM3D.config import get_config, convert_cfg_to_dict
 from src.SimMIM3D.networks import build_network
@@ -46,6 +46,7 @@ def main(
 
     if not is_pretrain and dataset == "brats":
         callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
+        callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", min_delta= 0.007, patience=20, check_on_train_epoch_end=False))
 
     trainer = pl.Trainer(
         # Compute
