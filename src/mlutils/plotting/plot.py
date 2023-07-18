@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_image_file(img):
+def plot_image_file(img, name = None):
     print(f"image shape: {img.shape}")
     plt.figure("image", (24, 6))
     if len(img.shape) == 3:
@@ -12,7 +12,9 @@ def plot_image_file(img):
             plt.title(f"Image channel {i}")
             plt.imshow(img[i, :, :, 60].detach().cpu(), cmap="gray")
     plt.show()
-    plt.savefig('image.png')
+    if name is None:
+        plt.savefig('image.png')
+    plt.savefig(name)
     print("Image saved")
 
 

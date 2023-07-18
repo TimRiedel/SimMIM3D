@@ -5,9 +5,8 @@ from torch.utils.data import random_split
 from monai.apps import DecathlonDataset
 from monai.data import DataLoader
 from monai.transforms import (
-    BorderPadd,
-    CenterSpatialCropd,
     Compose, 
+    CropForegroundd,
     EnsureChannelFirstd, 
     EnsureTyped, 
     LoadImaged, 
@@ -17,7 +16,9 @@ from monai.transforms import (
     RandFlipd,
     RandScaleIntensityd,
     RandShiftIntensityd,
+    RandSpatialCropd,
     Resized,
+    SpatialPadd,
     ToTensord,
 )
 
@@ -37,19 +38,22 @@ class BratsFinetuneData(pl.LightningDataModule):
         self.input_size = (img_size,) * 3
         self.train_frac = train_frac
 
-        max_size = (192, 192, 154)
+        max_size = (170, 170, 170)
         assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 128)`"
 
         self.train_transform = Compose([
-            LoadImaged(keys=["image"], image_only=True),
-            LoadImaged(keys=["label"], image_only=True, dtype=np.uint8),
+            LoadImaged(keys=["image", "label"], image_only=True),
             EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
+            # Constant Resizing and Normalization
+            CropForegroundd(keys=["image", "label"], source_key="image"),
+            SpatialPadd(keys=["image", "label"], spatial_size=max_size, mode="constant", constant_values=0),
+            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
+            Resized(keys=["label"], spatial_size=self.input_size, mode="nearest"),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
-            # Resizing
-            CenterSpatialCropd(keys=["image", "label"], roi_size=max_size),
-            BorderPadd(keys=["image", "label"], spatial_border=(0, 0, 19), mode="constant", constant_values=0),
+            # Rand Resizing
+            RandSpatialCropd(keys=["image", "label"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             Resized(keys=["label"], spatial_size=self.input_size, mode="nearest"),
             # Augmentation
@@ -63,17 +67,16 @@ class BratsFinetuneData(pl.LightningDataModule):
         ])
 
         self.val_transform = Compose([
-            LoadImaged(keys=["image"], image_only=True),
-            LoadImaged(keys=["label"], image_only=True, dtype=np.uint8),
+            LoadImaged(keys=["image", "label"], image_only=True),
             EnsureChannelFirstd(keys=["image", "label"]),
             EnsureTyped(keys=["image", "label"]),
             Orientationd(keys=["image", "label"], axcodes="RAS"),
-            NormalizeIntensityd(keys=["image"], channel_wise=True),
-            # Resizing
-            CenterSpatialCropd(keys=["image", "label"], roi_size=max_size),
-            BorderPadd(keys=["image", "label"], spatial_border=(0, 0, 19), mode="constant", constant_values=0),
+            # Constant Resizing and Normalization
+            CropForegroundd(keys=["image", "label"], source_key="image"),
+            SpatialPadd(keys=["image", "label"], spatial_size=max_size, mode="constant", constant_values=0),
             Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             Resized(keys=["label"], spatial_size=self.input_size, mode="nearest"),
+            NormalizeIntensityd(keys=["image"], channel_wise=True),
             ToTensord(keys=["image"], dtype=torch.float)
         ])
 
