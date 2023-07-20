@@ -19,6 +19,7 @@ TRAINING:
 MODEL:
     IN_CHANNELS: 4
     PATCH_SIZE: 16
+    ENCODER_DROPOUT: 0.1
 SYSTEM:
     ACCELERATOR: gpu
     STRATEGY: ddp_find_unused_parameters_true

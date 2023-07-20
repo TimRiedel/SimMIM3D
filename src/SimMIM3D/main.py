@@ -46,7 +46,8 @@ def main(
 
     if not is_pretrain and dataset == "brats":
         callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
-        callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", min_delta= 0.007, patience=20, check_on_train_epoch_end=False))
+        callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", patience=50, min_delta=0.007))
+
 
     trainer = pl.Trainer(
         # Compute
@@ -92,7 +93,7 @@ def parse_options():
 
 
 if __name__ == "__main__":
-    pl.seed_everything(1)
+    pl.seed_everything(1209)
 
     args, config = parse_options()
     is_pretrain = not args.finetune

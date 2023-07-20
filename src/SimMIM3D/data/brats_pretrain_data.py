@@ -38,7 +38,7 @@ class BratsPretrainData(pl.LightningDataModule):
         self.num_workers = num_workers
         self.input_size = (img_size,) * 3
 
-        max_size = (170, 170, 170)
+        max_size = (180, 180, 180)
         assert torch.all(torch.tensor(self.input_size) <= torch.tensor(max_size)), "Not all dimensions of `input_size` are less than or equal to `(192, 192, 154)`"
 
         self.train_transform = Compose([
@@ -49,10 +49,7 @@ class BratsPretrainData(pl.LightningDataModule):
             # Constant Resizing and Normalization
             CropForegroundd(keys=["image"], source_key="image"),
             SpatialPadd(keys=["image"], spatial_size=max_size, mode="constant", constant_values=0),
-            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
-            # Rand Resizing
-            RandSpatialCropd(keys=["image"], roi_size=(120, 120, 120), random_size=True),
             Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             # Augmentation
             RandFlipd(keys=["image"], prob=0.5, spatial_axis=0),
@@ -74,8 +71,8 @@ class BratsPretrainData(pl.LightningDataModule):
             # Constant Resizing and Normalization
             CropForegroundd(keys=["image"], source_key="image"),
             SpatialPadd(keys=["image"], spatial_size=max_size, mode="constant", constant_values=0),
-            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             NormalizeIntensityd(keys=["image"], channel_wise=True),
+            Resized(keys=["image"], spatial_size=self.input_size, mode="area"),
             # Mask
             MaskGenerator3D(img_size=img_size, mask_ratio=mask_ratio, mask_patch_size=patch_size),
             ToTensord(keys=["image"], dtype=torch.float),
