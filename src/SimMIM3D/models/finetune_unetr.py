@@ -35,17 +35,20 @@ class FinetuneUNETR(pl.LightningModule):
             sigmoid=False,
         )
         
-        if self.freeze_warmup_epochs > 0:
-            print("Freezing weights...")
-            for param in self.net.vit.parameters():
-                param.requires_grad = False
-            self.are_weights_frozen = True
-
         self.validation_step_outputs = []
         self.val_dice_score = DiceMetric(include_background=False, num_classes=self.num_classes, reduction="mean_batch")
 
         # Logging
         self.save_hyperparameters(ignore=["net", "learning_rate", "loss_fn"])
+
+    def freeze_weights(self):
+        if self.freeze_warmup_epochs > 0:
+            print("Freezing weights...")
+            named_params = dict(self.net.vit.named_parameters())
+            params = {k: v for k, v in named_params.items() if not k.startswith('patch_embedding')}
+            for param in params.values():
+                param.requires_grad = False
+            self.are_weights_frozen = True  
 
 
     def configure_optimizers(self):
@@ -60,6 +63,9 @@ class FinetuneUNETR(pl.LightningModule):
             warmup_steps=self.lr_warmup_epochs,
             t_total=self.epochs + self.lr_warmup_epochs
         )
+        
+        self.freeze_weights()
+
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": lr_scheduler, "interval": "epoch"}}
 
     def prepare_batch(self, batch):
@@ -74,9 +80,9 @@ class FinetuneUNETR(pl.LightningModule):
 
     # Training
     def on_train_epoch_start(self):
-        if self.are_weights_frozen and self.current_epoch >= self.freeze_warmup_epochs - 1:
+        if self.are_weights_frozen and self.current_epoch >= self.freeze_warmup_epochs:
             print("Unfreezing weights...")
-            for param in self.net.parameters():
+            for param in self.net.vit.parameters():
                 param.requires_grad = True
             self.are_weights_frozen = False
     
