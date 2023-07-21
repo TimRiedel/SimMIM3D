@@ -1,4 +1,5 @@
 import torch
+import wandb
 import warnings
 import pytorch_lightning as pl
 import argparse
@@ -19,56 +20,63 @@ def main(
         is_pretrain=True,
         dev_run=False
     ):
-    data = build_data(config, is_pretrain=is_pretrain, dataset=dataset)
-    network = build_network(config, is_pretrain=is_pretrain)
-    model = build_model(config, network, is_pretrain=is_pretrain)
+    for cv in range(config.TRAINING.CV_FOLDS):
+        pl.seed_everything(1209 + cv**3) # make it reproducible but still kind of random
 
-    wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
-    ckpt_dir = f"{config.LOGGING.CKPT_DIR}/{config.LOGGING.RUN_NAME}"
+        data = build_data(config, is_pretrain=is_pretrain, dataset=dataset)
+        network = build_network(config, is_pretrain=is_pretrain)
+        model = build_model(config, network, is_pretrain=is_pretrain)
 
-    wandb_config = convert_cfg_to_dict(config)
-    wandb_config.pop("LOGGING")
+        wandb_log_dir = f"{config.LOGGING.JOBS_DIR}/logs/"
+        run_name = config.LOGGING.RUN_NAME
+        if config.TRAINING.CV_FOLDS > 1:
+            run_name = f"{run_name}_cv{cv}"
+        ckpt_dir = f"{config.LOGGING.CKPT_DIR}/{run_name}"
 
-    logger = None
-    if not dev_run:
-        logger = WandbLogger(
-            project=config.LOGGING.PROJECT_NAME,
-            name=config.LOGGING.RUN_NAME,
-            save_dir=wandb_log_dir,
-            config=wandb_config,
-            log_model="True",
+        wandb_config = convert_cfg_to_dict(config)
+        wandb_config.pop("LOGGING")
+
+        logger = None
+        if not dev_run:
+            logger = WandbLogger(
+                project=config.LOGGING.PROJECT_NAME,
+                name=run_name,
+                save_dir=wandb_log_dir,
+                config=wandb_config,
+                log_model="True",
+            )
+
+        callbacks: list[pl.Callback] = [
+            ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
+            LearningRateMonitor(logging_interval="epoch"),
+        ]
+
+        if not is_pretrain and dataset == "brats":
+            callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
+            callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", patience=50, min_delta=0.007))
+
+
+        trainer = pl.Trainer(
+            # Compute
+            accelerator=config.SYSTEM.ACCELERATOR, 
+            strategy=config.SYSTEM.STRATEGY,
+            devices=config.SYSTEM.DEVICES,
+            num_nodes=config.SYSTEM.NODES,
+            precision=config.SYSTEM.PRECISION, 
+
+            # Training
+            max_epochs=config.TRAINING.EPOCHS + config.TRAINING.LR_WARMUP_EPOCHS,
+            fast_dev_run=dev_run,
+
+            # Logging
+            callbacks=callbacks,
+            logger=logger,
+            profiler="simple",
+            log_every_n_steps=config.DATA.BATCH_SIZE,
         )
 
-    callbacks: list[pl.Callback] = [
-        ModelCheckpoint(dirpath=ckpt_dir, monitor="validation/loss"),
-        LearningRateMonitor(logging_interval="epoch"),
-    ]
-
-    if not is_pretrain and dataset == "brats":
-        callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
-        callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", patience=50, min_delta=0.007))
-
-
-    trainer = pl.Trainer(
-        # Compute
-        accelerator=config.SYSTEM.ACCELERATOR, 
-        strategy=config.SYSTEM.STRATEGY,
-        devices=config.SYSTEM.DEVICES,
-        num_nodes=config.SYSTEM.NODES,
-        precision=config.SYSTEM.PRECISION, 
-
-        # Training
-        max_epochs=config.TRAINING.EPOCHS + config.TRAINING.LR_WARMUP_EPOCHS,
-        fast_dev_run=dev_run,
-
-        # Logging
-        callbacks=callbacks,
-        logger=logger,
-        profiler="simple",
-        log_every_n_steps=config.DATA.BATCH_SIZE,
-    )
-
-    trainer.fit(model, data)
+        trainer.fit(model, data)
+        wandb.finish()
 
 
 def parse_options():
@@ -82,6 +90,7 @@ def parse_options():
     parser.add_argument('--train_frac', type=float, help="fraction of training data for finetuning")
     parser.add_argument('--name_suffix', type=str, default="", help="suffix for run name")
     parser.add_argument('--load_checkpoint', type=str, help="path to checkpoint relative to checkpoint folder to use for finetuning")
+    parser.add_argument('--cv', type=int, help="number of cross validation folds to run")
 
     args = parser.parse_args()
 
@@ -93,8 +102,6 @@ def parse_options():
 
 
 if __name__ == "__main__":
-    pl.seed_everything(1209)
-
     args, config = parse_options()
     is_pretrain = not args.finetune
 

@@ -37,7 +37,7 @@ _C.DATA = CN()
 _C.DATA.DATA_DIR = ""
 # Input image size in one dimension
 _C.DATA.IMG_SIZE = 128
-# Number of classes for multilabel segmentation
+# Number of classes for multiclass segmentation
 _C.DATA.NUM_CLASSES = 4
 # Batch size for a single GPU
 _C.DATA.BATCH_SIZE = 8
@@ -54,12 +54,14 @@ _C.TRAINING = CN()
 _C.TRAINING.BASE_LR = 3e-4
 # Weight decay for the optimizer
 _C.TRAINING.WEIGHT_DECAY = 0.01
-# Number of warmup epochs in which encoder is frozen - set to 0 for no freezing or to EPOCHS for full freezing
+# [Finetuning] Number of warmup epochs in which encoder is frozen - set to 0 for no freezing or to EPOCHS for full freezing
 _C.TRAINING.FREEZE_WARMUP_EPOCHS = 20
 # Number of warmup epochs for learning rate scheduler
 _C.TRAINING.LR_WARMUP_EPOCHS = 100
 # Number of epochs to train for
 _C.TRAINING.EPOCHS = 450
+# Number of cross validation folds to run
+_C.TRAINING.CV_FOLDS = 1
 
 
 _C.MODEL = CN()
@@ -92,6 +94,9 @@ def get_config(args = None):
         _C.MODEL.ENCODER_CKPT_PATH = f"{_C.LOGGING.CKPT_DIR}/{args.load_checkpoint}"
     else:
         _C.TRAINING.FREEZE_WARMUP_EPOCHS = 0
+    
+    if args.cv:
+        _C.TRAINING.CV_FOLDS = args.cv
 
     if args.name_suffix:
         _C.LOGGING.RUN_NAME = f"{_C.LOGGING.RUN_NAME}_{args.name_suffix}"
