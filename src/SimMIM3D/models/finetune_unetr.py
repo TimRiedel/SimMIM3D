@@ -107,8 +107,8 @@ class FinetuneUNETR(pl.LightningModule):
         y_hat = torch.cat([output["y_pred"].cpu() for output in self.validation_step_outputs])
 
         # ET = 3            axis = 1
-        # WT = 3 + 1 + 2    axis = 2
-        # TC = 3 + 1        axis = 3
+        # WT = 3 + 2 + 1    axis = 2
+        # TC = 3 + 2        axis = 3
 
         dice_avg = 0
 
@@ -132,8 +132,8 @@ class FinetuneUNETR(pl.LightningModule):
         del wt_label
         del wt_y_hat
 
-        tc_label = one_hot(torch.where((label == 2) | (label == 3), 1, 0), num_classes=2)
-        tc_y_hat = one_hot(torch.where((y_hat == 3) | (y_hat == 1), 1, 0), num_classes=2)
+        tc_label = one_hot(torch.where((label == 3) | (label == 2), 1, 0), num_classes=2)
+        tc_y_hat = one_hot(torch.where((y_hat == 3) | (y_hat == 2), 1, 0), num_classes=2)
         dice = compute_dice(tc_label, tc_y_hat, include_background=False)
         dice = torch.nan_to_num(dice, nan=0)
         dice = torch.mean(dice, dim=0)
