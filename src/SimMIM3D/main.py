@@ -53,7 +53,7 @@ def main(
 
         if not is_pretrain and dataset == "brats":
             callbacks.append(LogBratsValidationPredictions(num_samples=config.DATA.BATCH_SIZE))
-            callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", patience=50, min_delta=0.007))
+            callbacks.append(EarlyStopping(monitor="validation/loss", mode="min", patience=80, min_delta=0.005))
 
 
         trainer = pl.Trainer(
