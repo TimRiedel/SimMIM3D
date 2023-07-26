@@ -3,16 +3,24 @@ import wandb
 from collections import defaultdict
 import os
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--project", type=str, default="adni-brats-finetune", choices=["adni-brats-finetune", "adni-brats-finetune-reconall", "brats-brats-finetune"])
+args = parser.parse_args()
+
 # Set your WandB API key
 wandb.login()
 
 # Define the mask ratios and train fractions
 mask_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
-train_fractions = [0.02, 0.1, 0.25, 0.5, 1.0]
+train_fractions = [0.1, 0.25, 0.5, 1.0]
 
 # Define the WandB entity and project
 entity = "timriedel"
-project = "brats-finetune"
+project = args.project
+
+print(f"Getting runs for project {project}...")
 
 # Define the save directory
 save_dir = "/dhc/home/tim.riedel/bachelor-thesis/jobs/results/"
@@ -25,13 +33,13 @@ runs = api.runs(f"{entity}/{project}")
 runs_dict = defaultdict(lambda: defaultdict(list))
 
 def save_df(df, filename):
-    df_supervised = df[df['Mask Ratio'] == 'Supervised']
-    df = df[df['Mask Ratio'] != 'Supervised']
+    df_supervised = df[df['Mask Ratio'] == 'Baseline']
+    df = df[df['Mask Ratio'] != 'Baseline']
     df = df.sort_values(by='Mask Ratio', ascending=False)
     df = pd.concat([df, df_supervised])
 
     filename = f"train_fraction_{train_fraction}.csv"
-    df.to_csv(os.path.join(save_dir, filename), index=False)
+    df.to_csv(os.path.join(save_dir, project, filename), index=False)
     print(f"Saved {filename}.")
     
 
@@ -60,7 +68,7 @@ for train_fraction, cv_runs in runs_dict.items():
         for run in runs:
             name = run.name
             try:
-                mask_ratio = "Supervised" if "Brats_SV_TF" in name else name.split(":")[1].split("_")[0] # Mask ratio or supervised
+                mask_ratio = "Baseline" if "Brats_SV_TF" in name else name.split(":")[1].split("_")[0] # Mask ratio or supervised
 
                 csv_dict["Average"].append(round(run.history(keys=["validation/dice"], x_axis="epoch").tail(1)["validation/dice"].values[0], 4))
                 csv_dict["TC"].append(round(run.history(keys=["validation/dice_tc"], x_axis="epoch").tail(1)["validation/dice_tc"].values[0], 4))
@@ -72,7 +80,6 @@ for train_fraction, cv_runs in runs_dict.items():
         
         if csv_dict["Average"] and csv_dict["TC"] and csv_dict["ET"] and csv_dict["WT"]:  # only save CSV if there are valid entries
             cv_df = pd.DataFrame(csv_dict)
-            # save_df(cv_df, f"train_fraction_{train_fraction}_cv{cv}.csv")
             tf_all_dfs.append(cv_df)
             
     combined_df = pd.concat(tf_all_dfs)

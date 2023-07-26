@@ -1,22 +1,28 @@
 import pandas as pd
 import glob
 import os
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--format_bold", action="store_true", default=False)
+args = parser.parse_args()
+
+project = "adni-brats-finetune"
+print(f"Generating table for project {project}...")
 # Define the directory containing the CSV files
-data_dir = '/dhc/home/tim.riedel/bachelor-thesis/jobs/results/'
-save_dir = '/dhc/home/tim.riedel/bachelor-thesis/jobs/results/'
+data_dir = os.path.join('/dhc/home/tim.riedel/bachelor-thesis/jobs/results/', project)
+save_dir = data_dir
 
-mask_ratios = ["0.7", "0.6", "0.5", "0.4", "0.3", "0.2", "0.1", "Supervised"]
-train_fracs = ["0.02", "0.1", "0.25", "0.5", "1.0"]
+mask_ratios = ["0.7", "0.6", "0.5", "0.4", "0.3", "0.2", "0.1", "Baseline"]
+train_fracs = ["0.1", "0.25", "0.5", "1.0"]
 
 
 # Get a list of all CSV files in the directory
 csv_files = glob.glob(data_dir + 'train_fraction_*.csv')
 
-# print(csv_files)
 
 def format_bold(val, is_max=False):
-    if is_max:
+    if is_max and args.format_bold:
         return f"\\underline{{\\textbf{{{str(val)}}}}}"
     return str(val)
 
@@ -25,10 +31,10 @@ def format_bold(val, is_max=False):
 def generate_latex_table():
     header = """\\begin{table}[]
     \\resizebox{\\textwidth}{!}{%
-    \\begin{tabular}{clcccclcccclcccclcccclcccc}
+    \\begin{tabular}{clcccclcccclcccclcccc}
     \\hline
-    Train Frac. &  & \\multicolumn{4}{c}{0.02} &  & \\multicolumn{4}{c}{0.1} &  & \\multicolumn{4}{c}{0.25} &  & \\multicolumn{4}{c}{0.5} &  & \\multicolumn{4}{c}{1.0} \\\\ \\cline{1-1} \\cline{3-6} \\cline{8-11} \\cline{13-16} \\cline{18-21} \\cline{23-26} 
-    Mask Ratio  &  & Avg    & TC     & ET     & WT    &  & Avg    & TC     & ET     & WT     &  & Avg    & TC     & ET     & WT    &  & Avg    & TC     & ET     & WT     &  & Avg    & TC     & ET     & WT     \\\\ \\hline"""
+    Train Frac. &  & \\multicolumn{4}{c}{0.1} &  & \\multicolumn{4}{c}{0.25} &  & \\multicolumn{4}{c}{0.5} &  & \\multicolumn{4}{c}{1.0} \\\\ \\cline{1-1} \\cline{3-6} \\cline{8-11} \\cline{13-16} 
+    Mask Ratio  &  & Avg    & TC     & ET     & WT     &  & Avg    & TC     & ET     & WT     &  & Avg    & TC     & ET     & WT     &  & Avg    & TC     & ET     & WT     \\\\ \\hline"""
     
 
     footer = """\\hline
@@ -38,18 +44,18 @@ def generate_latex_table():
 
     first_col = """
     {}         """
-    tf_row_format = """&  & {} & {} & {} & {}"""
+    tf_row_format = """&  & {} & {} & {} & {} """
 
     footer = """\\hline
     \\end{tabular}}
     \\caption{Results TODO}
-    \\label{tab:results_train_frac}\n\\end{table}"""
+    \\label{tab:results}\n\\end{table}"""
     
     table_rows = """"""
     for mr in mask_ratios:
         row_format = first_col.format(mr)
         for tf in train_fracs:
-            file = data_dir + f"train_fraction_{tf}.csv"
+            file = os.path.join(data_dir, f"train_fraction_{tf}.csv")
             try:
                 tf_df = pd.read_csv(file)
                 row = tf_df.loc[tf_df['Mask Ratio'] == mr]
