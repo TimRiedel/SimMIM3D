@@ -1,5 +1,5 @@
-from monai.networks.nets import UNETR
 import torch
+from monai.networks.nets import UNETR
 
 class UNETR3D(UNETR):
     def __init__(

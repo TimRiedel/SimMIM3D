@@ -1,5 +1,3 @@
-import torch
-
 from .pretrain_simmim import PretrainSimMIM
 from .finetune_unetr import FinetuneUNETR
 

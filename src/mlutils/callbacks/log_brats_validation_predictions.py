@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 import wandb
 import pytorch_lightning as pl
 
