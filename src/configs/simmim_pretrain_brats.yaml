@@ -1,0 +1,26 @@
+LOGGING:
+    PROJECT_NAME: brats-pretrain
+    RUN_NAME: Brats_PT
+    JOBS_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/logs
+    CKPT_DIR: /dhc/home/tim.riedel/bachelor-thesis/jobs/checkpoints
+DATA:
+    DATA_DIR: /dhc/home/tim.riedel/bachelor-thesis/data/BraTS2017
+    IMG_SIZE: 128
+    BATCH_SIZE: 16
+    NUM_WORKERS: 18
+    MASK_RATIO: 0.7
+TRAINING:
+    BASE_LR: 5e-4
+    WEIGHT_DECAY: 0.005
+    LR_WARMUP_EPOCHS: 50
+    EPOCHS: 450
+MODEL:
+    IN_CHANNELS: 4
+    PATCH_SIZE: 16
+    ENCODER_DROPOUT: 0.1
+SYSTEM:
+    ACCELERATOR: gpu
+    STRATEGY: ddp
+    DEVICES: -1
+    NODES: 1
+    PRECISION: 32-true
